@@ -1,0 +1,32 @@
+{
+  "name": "meshblu-core-manager-token",
+  "version": "1.0.0",
+  "description": "Meshblu Token Manager",
+  "main": "index.js",
+  "scripts": {
+    "test": "istanbul cover _mocha -- -R spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/octoblu/meshblu-core-manager-token.git"
+  },
+  "keywords": [
+    "Meshblu"
+  ],
+  "author": "Octoblu, <serveradmin@octoblu.com> (https://octoblu.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/octoblu/meshblu-core-manager-token/issues"
+  },
+  "homepage": "https://github.com/octoblu/meshblu-core-manager-token#readme",
+  "devDependencies": {
+    "chai": "^3.4.0",
+    "coffee-coverage": "^0.6.3",
+    "coffee-script": "^1.10.0",
+    "istanbul": "^0.4.0",
+    "mocha": "^2.3.3",
+    "mocha-istanbul": "^0.2.0",
+    "sinon": "^1.17.2",
+    "sinon-chai": "^2.8.0"
+  }
+}
