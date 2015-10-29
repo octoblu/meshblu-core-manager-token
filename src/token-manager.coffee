@@ -20,8 +20,7 @@ class TokenManager
     try
       hashedToken  = @_hashToken record.uuid, token
     catch error
-      callback error
-      return
+      return callback null, false
     hashedTokens = record.meshblu.tokens
 
     callback null, hashedTokens[hashedToken]?

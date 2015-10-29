@@ -42,7 +42,7 @@ describe 'TokenManager', ->
         it 'should yield no error', ->
           expect(@error).not.to.exist
 
-        it 'should yield true', ->
+        it 'should yield false', ->
           expect(@result).to.be.false
 
     describe 'when called with an invalid uuid', ->
