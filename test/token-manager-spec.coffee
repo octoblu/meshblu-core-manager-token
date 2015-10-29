@@ -86,7 +86,7 @@ describe 'TokenManager', ->
       beforeEach (done) ->
         @sut = new TokenManager
           datastore: @datastore
-          hashToken: 'is super secret, ssshh'
+          pepper: 'is super secret, ssshh'
 
         @sut.verifyToken uuid: 'uuid', token: 'POPPED', (@error, @result) => done()
 
