@@ -11,16 +11,16 @@ class TokenManager
     hasher.update @pepper
     hasher.digest 'base64'
 
-  verifyToken: ({uuid:uuid,token:token}, callback)=>
+  verifyToken: ({uuid:uuid,token:token}, callback) =>
     @datastore.findOne uuid: uuid, (error, record) =>
       return callback error if error?
       return callback null, false unless record?
 
-      @_verifyRootToken token, record.token, (error,valid)=>
+      @_verifySessionToken token, record, (error,valid) =>
         return callback error if error?
         return callback null, valid if valid
 
-        @_verifySessionToken token, record, callback
+        @_verifyRootToken token, record.token, callback
 
   _verifyRootToken: (token, hashedToken, callback) =>
     bcrypt.compare token, hashedToken, callback
