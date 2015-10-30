@@ -26,12 +26,14 @@ class TokenManager
     bcrypt.compare token, hashedToken, callback
 
   _verifySessionToken: (token, record, callback) =>
+    return callback null, false unless record.meshblu?.tokens?
+
     try
       hashedToken  = @hashToken record.uuid, token
     catch error
       return callback null, false
-    hashedTokens = record.meshblu.tokens
 
+    hashedTokens = record.meshblu.tokens
     callback null, hashedTokens[hashedToken]?
 
 module.exports = TokenManager
