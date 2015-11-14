@@ -6,8 +6,8 @@ class TokenManager
 
   hashToken: (uuid, token) =>
     hasher = crypto.createHash 'sha256'
-    hasher.update uuid
     hasher.update token
+    hasher.update uuid
     hasher.update @pepper
     hasher.digest 'base64'
 

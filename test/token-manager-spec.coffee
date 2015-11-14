@@ -73,7 +73,7 @@ describe 'TokenManager', ->
 
     describe 'when uuid "uuid" has the session token "POPPED"', ->
       beforeEach (done) ->
-        hashedPOPPED = '/qdqp5cuDhLL5a9CrWTzkXs+cmAL5XvS58a8RAVpPnM='
+        hashedPOPPED = 'EdZOPunc/qlzKS4VwCSH3qk2Ite3xPuXN/jeh6HMB9g='
         record =
           uuid: 'uuid'
           token: ''
