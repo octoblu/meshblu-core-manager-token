@@ -6,14 +6,14 @@ TokenManager = require '../src/token-manager'
 
 describe 'TokenManager', ->
   beforeEach (done) ->
+    @uuidAliasResolver = resolve: (uuid, callback) => callback(null, uuid)
     @datastore = new Datastore
       database: 'token-manager-test'
       collection: 'things'
     @datastore.remove done
 
   beforeEach ->
-    @sut = new TokenManager
-      datastore: @datastore
+    @sut = new TokenManager {@uuidAliasResolver, @datastore}
 
   describe '->verifyToken', ->
     describe 'when uuid "uuid" has the root token "MEAT GRINDER"', ->
@@ -84,9 +84,8 @@ describe 'TokenManager', ->
         @datastore.insert record, done
 
       beforeEach (done) ->
-        @sut = new TokenManager
-          datastore: @datastore
-          pepper: 'is super secret, ssshh'
+        pepper = 'is super secret, ssshh'
+        @sut = new TokenManager {@datastore,pepper,@uuidAliasResolver}
 
         @sut.verifyToken uuid: 'uuid', token: 'POPPED', (@error, @result) => done()
 
