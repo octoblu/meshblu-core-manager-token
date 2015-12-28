@@ -1,3 +1,4 @@
+_      = require 'lodash'
 bcrypt = require 'bcrypt'
 crypto = require 'crypto'
 
@@ -12,6 +13,18 @@ class TokenManager
       hasher.update uuid
       hasher.update @pepper
       callback null, hasher.digest 'base64'
+
+  revokeTokenByQuery: (uuid, query, callback) =>
+    @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      @datastore.findOne {uuid}, (error, record) =>
+        return callback error if error?
+        return callback null, false unless record?
+
+        hashedTokens = _.pick record.meshblu.tokens, (value) => _.some [value], query
+        hashedTokens = _.mapKeys hashedTokens, (_, hashedToken) => "meshblu.tokens.#{hashedToken}"
+        hashedTokens = _.mapValues hashedTokens, => true
+
+        @datastore.update {uuid}, $unset: hashedTokens, callback
 
   verifyToken: ({uuid,token}, callback) =>
     return callback null, false unless uuid? and token?

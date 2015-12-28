@@ -1,6 +1,6 @@
 {
   "name": "meshblu-core-manager-token",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Meshblu Token Manager",
   "main": "index.js",
   "scripts": {
@@ -27,11 +27,12 @@
     "meshblu-core-datastore": "^1.0.1",
     "mocha": "^2.3.3",
     "mocha-istanbul": "^0.2.0",
+    "mongojs": "^2.2.2",
     "sinon": "^1.17.2",
     "sinon-chai": "^2.8.0"
   },
   "dependencies": {
     "bcrypt": "^0.8.5",
-    "meshblu-core-datastore": "^1.0.5"
+    "meshblu-core-datastore": "^2.3.1"
   }
 }

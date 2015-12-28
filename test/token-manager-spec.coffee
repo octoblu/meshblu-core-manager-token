@@ -1,5 +1,6 @@
-bcrypt = require 'bcrypt'
-crypto = require 'crypto'
+bcrypt    = require 'bcrypt'
+crypto    = require 'crypto'
+mongojs   = require 'mongojs'
 Datastore = require 'meshblu-core-datastore'
 
 TokenManager = require '../src/token-manager'
@@ -8,12 +9,37 @@ describe 'TokenManager', ->
   beforeEach (done) ->
     @uuidAliasResolver = resolve: (uuid, callback) => callback(null, uuid)
     @datastore = new Datastore
-      database: 'token-manager-test'
+      database: mongojs 'token-manager-test'
       collection: 'things'
     @datastore.remove done
 
   beforeEach ->
     @sut = new TokenManager {@uuidAliasResolver, @datastore}
+
+  describe '->revokeTokenByQuery', ->
+    describe 'when a device with tagged tokens is inserted', ->
+      beforeEach (done) ->
+        device =
+          uuid: 'spiral'
+          meshblu:
+            tokens:
+              "U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU=":
+                createdAt: "2015-12-28T16:55:22.459Z"
+                tag: "hello"
+              "PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8=":
+                createdAt: "2015-12-28T16:55:30.183Z"
+                tag: "hello"
+        @datastore.insert device, done
+
+      describe 'when called with a valid query', ->
+        beforeEach (done) ->
+          @sut.revokeTokenByQuery 'spiral', tag: 'hello', done
+
+        it 'should not have any tokens', (done) ->
+          @datastore.findOne uuid: 'spiral', (error, device) =>
+            expect(device.meshblu.tokens["U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU="]).to.not.exist
+            expect(device.meshblu.tokens["PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8="]).to.not.exist
+            done()
 
   describe '->verifyToken', ->
     describe 'when uuid "uuid" has the root token "MEAT GRINDER"', ->
