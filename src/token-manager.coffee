@@ -22,11 +22,12 @@ class TokenManager
         return callback null, false unless record?
 
         hashedTokens = _.pick record.meshblu.tokens, (value) => _.some [value], query
-        @_clearTokensFromCache uuid, _.keys(hashedTokens), (error) =>
-          return callback error if error?
-          unsetHashTokens = _.mapKeys hashedTokens, (_, hashedToken) => "meshblu.tokens.#{hashedToken}"
-          unsetHashTokens = _.mapValues unsetHashTokens, => true
+        hashedTokenKeys = _.keys hashedTokens
+        unsetHashTokens = _.mapKeys hashedTokens, (_, hashedToken) => "meshblu.tokens.#{hashedToken}"
+        unsetHashTokens = _.mapValues unsetHashTokens, => true
 
+        return callback null unless _.size hashedTokenKeys
+        @_clearTokensFromCache uuid, hashedTokenKeys, =>
           @datastore.update {uuid}, $unset: unsetHashTokens, callback
 
   verifyToken: ({uuid,token}, callback) =>
@@ -43,10 +44,10 @@ class TokenManager
           @_verifyRootToken token, record.token, callback
 
   _clearTokensFromCache: (uuid, hashedTokens, callback) =>
-    async.each hashedTokens,
-      (hashedToken, done) =>
-        @cache.del "#{uuid}:#{hashedToken}", done
-      callback
+    async.each hashedTokens, async.apply(@_clearTokenFromCache, uuid), callback
+
+  _clearTokenFromCache: (uuid, hashedToken, done) =>
+    @cache.del "#{uuid}:#{hashedToken}", done
 
   _verifyRootToken: (token, hashedToken, callback) =>
     return callback null, false unless token? and hashedToken?

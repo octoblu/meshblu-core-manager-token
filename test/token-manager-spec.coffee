@@ -4,6 +4,7 @@ uuid      = require 'uuid'
 redis     = require 'fakeredis'
 mongojs   = require 'mongojs'
 Datastore = require 'meshblu-core-datastore'
+Cache     = require 'meshblu-core-cache'
 
 TokenManager = require '../src/token-manager'
 
@@ -14,7 +15,8 @@ describe 'TokenManager', ->
     @datastore = new Datastore
       database: mongojs 'token-manager-test'
       collection: 'things'
-    @cache = redis.createClient @redisKey
+    @cache = new Cache
+      client: redis.createClient @redisKey
     @datastore.remove done
 
   beforeEach ->
@@ -54,12 +56,12 @@ describe 'TokenManager', ->
 
         it 'should remove the token 1 from the cache', (done) ->
           @cache.exists "spiral:U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU=", (error, result) =>
-            expect(result).to.equal 0
+            expect(result).to.be.false
             done()
 
         it 'should remove the token 2 from the cache', (done) ->
           @cache.exists "spiral:PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8=", (error, result) =>
-            expect(result).to.equal 0
+            expect(result).to.be.false
             done()
 
   describe '->verifyToken', ->
