@@ -1,9 +1,10 @@
 _      = require 'lodash'
 bcrypt = require 'bcrypt'
 crypto = require 'crypto'
+async  = require 'async'
 
 class TokenManager
-  constructor: ({@datastore,@pepper,@uuidAliasResolver}) ->
+  constructor: ({@datastore,@cache,@pepper,@uuidAliasResolver}) ->
 
   hashToken: (uuid, token, callback) =>
     return callback null, null unless uuid? and token?
@@ -21,10 +22,12 @@ class TokenManager
         return callback null, false unless record?
 
         hashedTokens = _.pick record.meshblu.tokens, (value) => _.some [value], query
-        hashedTokens = _.mapKeys hashedTokens, (_, hashedToken) => "meshblu.tokens.#{hashedToken}"
-        hashedTokens = _.mapValues hashedTokens, => true
+        @_clearTokensFromCache uuid, _.keys(hashedTokens), (error) =>
+          return callback error if error?
+          unsetHashTokens = _.mapKeys hashedTokens, (_, hashedToken) => "meshblu.tokens.#{hashedToken}"
+          unsetHashTokens = _.mapValues unsetHashTokens, => true
 
-        @datastore.update {uuid}, $unset: hashedTokens, callback
+          @datastore.update {uuid}, $unset: unsetHashTokens, callback
 
   verifyToken: ({uuid,token}, callback) =>
     return callback null, false unless uuid? and token?
@@ -38,6 +41,12 @@ class TokenManager
           return callback null, valid if valid
 
           @_verifyRootToken token, record.token, callback
+
+  _clearTokensFromCache: (uuid, hashedTokens, callback) =>
+    async.each hashedTokens,
+      (hashedToken, done) =>
+        @cache.del "#{uuid}:#{hashedToken}", done
+      callback
 
   _verifyRootToken: (token, hashedToken, callback) =>
     return callback null, false unless token? and hashedToken?

@@ -1,5 +1,7 @@
 bcrypt    = require 'bcrypt'
 crypto    = require 'crypto'
+uuid      = require 'uuid'
+redis     = require 'fakeredis'
 mongojs   = require 'mongojs'
 Datastore = require 'meshblu-core-datastore'
 
@@ -7,14 +9,16 @@ TokenManager = require '../src/token-manager'
 
 describe 'TokenManager', ->
   beforeEach (done) ->
+    @redisKey = uuid.v1()
     @uuidAliasResolver = resolve: (uuid, callback) => callback(null, uuid)
     @datastore = new Datastore
       database: mongojs 'token-manager-test'
       collection: 'things'
+    @cache = redis.createClient @redisKey
     @datastore.remove done
 
   beforeEach ->
-    @sut = new TokenManager {@uuidAliasResolver, @datastore}
+    @sut = new TokenManager {@uuidAliasResolver, @datastore, @cache}
 
   describe '->revokeTokenByQuery', ->
     describe 'when a device with tagged tokens is inserted', ->
@@ -29,7 +33,14 @@ describe 'TokenManager', ->
               "PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8=":
                 createdAt: "2015-12-28T16:55:30.183Z"
                 tag: "hello"
+
         @datastore.insert device, done
+
+      beforeEach (done) ->
+        @cache.set "spiral:U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU=", 'set', done
+
+      beforeEach (done) ->
+        @cache.set "spiral:PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8=", 'set', done
 
       describe 'when called with a valid query', ->
         beforeEach (done) ->
@@ -39,6 +50,16 @@ describe 'TokenManager', ->
           @datastore.findOne uuid: 'spiral', (error, device) =>
             expect(device.meshblu.tokens["U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU="]).to.not.exist
             expect(device.meshblu.tokens["PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8="]).to.not.exist
+            done()
+
+        it 'should remove the token 1 from the cache', (done) ->
+          @cache.exists "spiral:U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU=", (error, result) =>
+            expect(result).to.equal 0
+            done()
+
+        it 'should remove the token 2 from the cache', (done) ->
+          @cache.exists "spiral:PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8=", (error, result) =>
+            expect(result).to.equal 0
             done()
 
   describe '->verifyToken', ->
