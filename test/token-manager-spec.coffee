@@ -11,6 +11,7 @@ TokenManager = require '../src/token-manager'
 describe 'TokenManager', ->
   beforeEach (done) ->
     @redisKey = uuid.v1()
+    @pepper = 'im-a-pepper'
     @uuidAliasResolver = resolve: (uuid, callback) => callback(null, uuid)
     @datastore = new Datastore
       database: mongojs 'token-manager-test'
@@ -20,7 +21,29 @@ describe 'TokenManager', ->
     @datastore.remove done
 
   beforeEach ->
-    @sut = new TokenManager {@uuidAliasResolver, @datastore, @cache}
+    @sut = new TokenManager {@uuidAliasResolver, @datastore, @cache, @pepper}
+
+  describe '->generateAndStoreTokenInCache', ->
+    beforeEach (done) ->
+      @sut.generateToken = sinon.stub().returns('abc123')
+      @sut.generateAndStoreTokenInCache 'spiral', done
+
+    it 'should add a token to the cache', (done) ->
+      @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+        expect(result).to.be.true
+        done()
+
+  describe '->removeTokenFromCache', ->
+    beforeEach (done) ->
+      @cache.set "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", '', done
+
+    beforeEach (done) ->
+      @sut.removeTokenFromCache 'spiral', 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=', done
+
+    it 'should remove the token from the cache', (done) ->
+      @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+        expect(result).to.be.false
+        done()
 
   describe '->revokeTokenByQuery', ->
     describe 'when a device with tagged tokens is inserted', ->

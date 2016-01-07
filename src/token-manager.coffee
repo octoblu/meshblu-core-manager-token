@@ -6,6 +6,17 @@ async  = require 'async'
 class TokenManager
   constructor: ({@datastore,@cache,@pepper,@uuidAliasResolver}) ->
 
+  generateToken: =>
+    return crypto.createHash('sha1').update((new Date()).valueOf().toString() + Math.random().toString()).digest('hex');
+
+  generateAndStoreTokenInCache: (uuid, callback=->)=>
+    token = @generateToken()
+    @hashToken uuid, token, (error, hashedToken) =>
+      return callback error if error?
+      @cache.set "#{uuid}:#{hashedToken}", '', (error) =>
+        return callback error if error?
+        callback null, token
+
   hashToken: (uuid, token, callback) =>
     return callback null, null unless uuid? and token?
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
@@ -14,6 +25,10 @@ class TokenManager
       hasher.update uuid
       hasher.update @pepper
       callback null, hasher.digest 'base64'
+
+  removeTokenFromCache: (uuid, token, callback) =>
+    @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      @_clearTokenFromCache uuid, token, callback
 
   revokeTokenByQuery: (uuid, query, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
