@@ -28,7 +28,12 @@ class TokenManager
 
   removeTokenFromCache: (uuid, token, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
-      @_clearTokenFromCache uuid, token, callback
+      @hashToken uuid, token, (error, hashedToken) =>
+        @_clearHashedTokenFromCache uuid, hashedToken, callback
+
+  removeHashedTokenFromCache: (uuid, hashedToken, callback) =>
+    @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      @_clearHashedTokenFromCache uuid, hashedToken, callback
 
   revokeTokenByQuery: (uuid, query, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
@@ -42,7 +47,7 @@ class TokenManager
         unsetHashTokens = _.mapValues unsetHashTokens, => true
 
         return callback null unless _.size hashedTokenKeys
-        @_clearTokensFromCache uuid, hashedTokenKeys, =>
+        @_clearHashedTokensFromCache uuid, hashedTokenKeys, =>
           @datastore.update {uuid}, $unset: unsetHashTokens, callback
 
   verifyToken: ({uuid,token}, callback) =>
@@ -58,10 +63,10 @@ class TokenManager
 
           @_verifyRootToken token, record.token, callback
 
-  _clearTokensFromCache: (uuid, hashedTokens, callback) =>
-    async.each hashedTokens, async.apply(@_clearTokenFromCache, uuid), callback
+  _clearHashedTokensFromCache: (uuid, hashedTokens, callback) =>
+    async.each hashedTokens, async.apply(@_clearHashedTokenFromCache, uuid), callback
 
-  _clearTokenFromCache: (uuid, hashedToken, done) =>
+  _clearHashedTokenFromCache: (uuid, hashedToken, done) =>
     @cache.del "#{uuid}:#{hashedToken}", done
 
   _verifyRootToken: (token, hashedToken, callback) =>

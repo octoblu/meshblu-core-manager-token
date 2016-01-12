@@ -33,12 +33,24 @@ describe 'TokenManager', ->
         expect(result).to.be.true
         done()
 
-  describe '->removeTokenFromCache', ->
+  describe '->removeHashedTokenFromCache', ->
     beforeEach (done) ->
       @cache.set "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", '', done
 
     beforeEach (done) ->
-      @sut.removeTokenFromCache 'spiral', 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=', done
+      @sut.removeHashedTokenFromCache 'spiral', 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=', done
+
+    it 'should remove the token from the cache', (done) ->
+      @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+        expect(result).to.be.false
+        done()
+
+  describe '->removeHashedTokenFromCache', ->
+    beforeEach (done) ->
+      @cache.set "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", '', done
+
+    beforeEach (done) ->
+      @sut.removeTokenFromCache 'spiral', 'abc123', done
 
     it 'should remove the token from the cache', (done) ->
       @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
