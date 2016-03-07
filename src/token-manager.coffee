@@ -16,7 +16,7 @@ class TokenManager
 
       @cache.set "#{uuid}:#{hashedToken}", '', (error) =>
         return callback error if error?
-        return @cache.expire "#{uuid}:#{hashedToken}", expireSeconds, callback if expireSeconds?
+        @cache.expire "#{uuid}:#{hashedToken}", expireSeconds, (->) if expireSeconds?
         callback null, token
 
   hashToken: ({uuid, token}, callback) =>
