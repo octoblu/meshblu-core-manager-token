@@ -24,21 +24,41 @@ describe 'TokenManager', ->
     @sut = new TokenManager {@uuidAliasResolver, @datastore, @cache, @pepper}
 
   describe '->generateAndStoreTokenInCache', ->
-    beforeEach (done) ->
-      @sut.generateToken = sinon.stub().returns('abc123')
-      @sut.generateAndStoreTokenInCache 'spiral', done
 
-    it 'should add a token to the cache', (done) ->
-      @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
-        expect(result).to.be.true
-        done()
+    describe 'when called without options', ->
+      beforeEach (done) ->
+        @sut.generateToken = sinon.stub().returns('abc123')
+        @sut.generateAndStoreTokenInCache uuid: 'spiral', done
+
+      it 'should add a token to the cache', (done) ->
+        @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+          expect(result).to.be.true
+          done()
+
+    describe 'when called with options', ->
+      beforeEach (done) ->
+        @sut.generateToken = sinon.stub().returns('abc123')
+        @sut.generateAndStoreTokenInCache uuid: 'spiral', expireSeconds: 1, done
+
+      it 'should add a token to the cache', (done) ->
+        @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+          expect(result).to.be.true
+          done()
+
+      it 'should expire the token in 1 second', (done)->
+        setTimeout (=>
+          @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+            expect(result).to.be.false
+            done()
+          ) , 1100
+
 
   describe '->removeHashedTokenFromCache', ->
     beforeEach (done) ->
       @cache.set "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", '', done
 
     beforeEach (done) ->
-      @sut.removeHashedTokenFromCache 'spiral', 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=', done
+      @sut.removeHashedTokenFromCache uuid: 'spiral', hashedToken: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=', done
 
     it 'should remove the token from the cache', (done) ->
       @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
@@ -50,7 +70,7 @@ describe 'TokenManager', ->
       @cache.set "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", '', done
 
     beforeEach (done) ->
-      @sut.removeTokenFromCache 'spiral', 'abc123', done
+      @sut.removeTokenFromCache uuid: 'spiral', token: 'abc123', done
 
     it 'should remove the token from the cache', (done) ->
       @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
@@ -81,7 +101,7 @@ describe 'TokenManager', ->
 
       describe 'when called with a valid query', ->
         beforeEach (done) ->
-          @sut.revokeTokenByQuery 'spiral', tag: 'hello', done
+          @sut.revokeTokenByQuery uuid: 'spiral', tag: 'hello', done
 
         it 'should not have any tokens', (done) ->
           @datastore.findOne uuid: 'spiral', (error, device) =>
