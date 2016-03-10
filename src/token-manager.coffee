@@ -5,6 +5,7 @@ async  = require 'async'
 
 class TokenManager
   constructor: ({@datastore,@cache,@pepper,@uuidAliasResolver}) ->
+    throw new Error "Missing mandatory parameter: @pepper" if _.isEmpty @pepper
 
   generateToken: =>
     return crypto.createHash('sha1').update((new Date()).valueOf().toString() + Math.random().toString()).digest('hex');
