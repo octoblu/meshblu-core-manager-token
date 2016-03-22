@@ -115,6 +115,35 @@ describe 'TokenManager', ->
         expect(result).to.be.false
         done()
 
+  describe '->revokeToken', ->
+    describe 'when a device with tagged tokens is inserted', ->
+      beforeEach (done) ->
+        device =
+          uuid: 'spiral'
+          meshblu:
+            tokens:
+              "T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=":
+                createdAt: "2015-12-28T16:55:22.459Z"
+
+        @datastore.insert device, done
+
+      beforeEach (done) ->
+        @cache.set "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", 'set', done
+
+      describe 'when called with a valid query', ->
+        beforeEach (done) ->
+          @sut.revokeToken uuid: 'spiral', token: 'abc123', done
+
+        it 'should not have any tokens', (done) ->
+          @datastore.findOne uuid: 'spiral', (error, device) =>
+            expect(device.meshblu.tokens["T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U="]).to.not.exist
+            done()
+
+        it 'should remove the token 1 from the cache', (done) ->
+          @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+            expect(result).to.be.false
+            done()
+
   describe '->revokeTokenByQuery', ->
     describe 'when a device with tagged tokens is inserted', ->
       beforeEach (done) ->

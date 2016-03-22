@@ -47,6 +47,18 @@ class TokenManager
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       @_clearHashedTokenFromCache uuid, hashedToken, callback
 
+  revokeToken: ({uuid, token}, callback) =>
+    @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      @datastore.findOne {uuid}, (error, record) =>
+        return callback error if error?
+        return callback null, false unless record?
+        @hashToken {uuid, token}, (error, hashedToken) =>
+          @datastore.update {uuid}, $unset : {"meshblu.tokens.#{hashedToken}"}, (error) =>
+            return callback error if error?
+            @_clearHashedTokenFromCache uuid, hashedToken, (error) =>
+              return callback error if error?
+              callback null, true
+
   revokeTokenByQuery: ({uuid, query}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       @datastore.findOne {uuid}, (error, record) =>
