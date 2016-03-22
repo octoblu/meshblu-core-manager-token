@@ -53,6 +53,7 @@ class TokenManager
         return callback error if error?
         return callback null, false unless record?
         @hashToken {uuid, token}, (error, hashedToken) =>
+          return callback error if error?
           @datastore.update {uuid}, $unset : {"meshblu.tokens.#{hashedToken}"}, (error) =>
             return callback error if error?
             @_clearHashedTokenFromCache uuid, hashedToken, (error) =>
