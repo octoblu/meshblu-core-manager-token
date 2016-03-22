@@ -52,6 +52,44 @@ describe 'TokenManager', ->
             done()
           ) , 1100
 
+  describe '->generateAndStoreToken', ->
+    beforeEach (done) ->
+      @datastore.insert {uuid: 'spiral'}, done
+
+    describe 'when called without options', ->
+      beforeEach (done) ->
+        @sut.generateToken = sinon.stub().returns('abc123')
+        @sut.generateAndStoreToken uuid: 'spiral', done
+
+      it 'should add a token to the datstore', (done) ->
+        @datastore.findOne {uuid: 'spiral'}, (error, device) =>
+          return done error if error?
+          expect(device.meshblu.tokens['T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=']).to.exist
+          done()
+
+      it 'should add a token to the cache', (done) ->
+        @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+          expect(result).to.be.true
+          done()
+
+    describe 'when called with options', ->
+      beforeEach (done) ->
+        @sut.generateToken = sinon.stub().returns('abc123')
+        data =
+          tag: 'foo'
+        @sut.generateAndStoreToken {uuid: 'spiral', data}, done
+
+      it 'should add a token to the datstore', (done) ->
+        @datastore.findOne {uuid: 'spiral'}, (error, device) =>
+          return done error if error?
+          expect(device.meshblu.tokens['T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=']).to.exist
+          expect(device.meshblu.tokens['T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='].tag).to.deep.equal 'foo'
+          done()
+
+      it 'should add a token to the cache', (done) ->
+        @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+          expect(result).to.be.true
+          done()
 
   describe '->removeHashedTokenFromCache', ->
     beforeEach (done) ->

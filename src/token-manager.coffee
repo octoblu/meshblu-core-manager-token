@@ -15,10 +15,19 @@ class TokenManager
     @hashToken {uuid, token}, (error, hashedToken) =>
       return callback error if error?
 
-      @cache.set "#{uuid}:#{hashedToken}", '', (error) =>
+      @_storeHashedTokenInCache {uuid, hashedToken, expireSeconds}, (error) =>
         return callback error if error?
-        @cache.expire "#{uuid}:#{hashedToken}", expireSeconds, (->) if expireSeconds?
         callback null, token
+
+  generateAndStoreToken: ({uuid, data}, callback) =>
+    token = @generateToken()
+    @hashToken {uuid, token}, (error, hashedToken) =>
+      return callback error if error?
+      @_storeHashedToken {uuid, hashedToken, data}, (error) =>
+        return callback error if error?
+        @_storeHashedTokenInCache {uuid, hashedToken}, (error) =>
+          return callback error if error?
+          callback null, token
 
   hashToken: ({uuid, token}, callback) =>
     return callback null, null unless uuid? and token?
@@ -71,6 +80,17 @@ class TokenManager
 
   _clearHashedTokenFromCache: (uuid, hashedToken, done) =>
     @cache.del "#{uuid}:#{hashedToken}", done
+
+  _storeHashedToken: ({uuid, hashedToken, data}, callback) =>
+    data ?= {}
+    data.createdAt = new Date()
+    @datastore.update {uuid}, $set: {"meshblu.tokens.#{hashedToken}" : data}, callback
+
+  _storeHashedTokenInCache: ({uuid, hashedToken, expireSeconds}, callback) =>
+    @cache.set "#{uuid}:#{hashedToken}", '', (error) =>
+      return callback error if error?
+      @cache.expire "#{uuid}:#{hashedToken}", expireSeconds, (->) if expireSeconds?
+      callback()
 
   _verifyRootToken: (token, hashedToken, callback) =>
     return callback null, false unless token? and hashedToken?
