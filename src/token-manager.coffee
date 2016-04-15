@@ -100,10 +100,10 @@ class TokenManager
     @datastore.update {uuid}, $set: {"meshblu.tokens.#{hashedToken}" : data}, callback
 
   _storeHashedTokenInCache: ({uuid, hashedToken, expireSeconds}, callback) =>
-    @cache.set "#{uuid}:#{hashedToken}", '', (error) =>
-      return callback error if error?
-      @cache.expire "#{uuid}:#{hashedToken}", expireSeconds, (->) if expireSeconds?
-      callback()
+    if expireSeconds?
+      return @cache.setex "#{uuid}:#{hashedToken}", expireSeconds, '', callback
+
+    @cache.set "#{uuid}:#{hashedToken}", '', callback
 
   _verifyRootToken: (token, hashedToken, callback) =>
     return callback null, false unless token? and hashedToken?

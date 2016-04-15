@@ -46,11 +46,10 @@ describe 'TokenManager', ->
           done()
 
       it 'should expire the token in 1 second', (done)->
-        setTimeout (=>
-          @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
-            expect(result).to.be.false
-            done()
-          ) , 1100
+        @cache.ttl "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, ttl) =>
+          return done error if error?
+          expect(ttl).to.equal 1
+          done()
 
   describe '->generateAndStoreToken', ->
     beforeEach (done) ->
