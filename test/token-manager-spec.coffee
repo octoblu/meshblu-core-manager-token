@@ -13,12 +13,13 @@ describe 'TokenManager', ->
     @redisKey = uuid.v1()
     @pepper = 'im-a-pepper'
     @uuidAliasResolver = resolve: (uuid, callback) => callback(null, uuid)
+    database = mongojs 'token-manager-test', ['things']
     @datastore = new Datastore
-      database: mongojs 'token-manager-test'
+      database: database
       collection: 'things'
     @cache = new Cache
       client: redis.createClient @redisKey
-    @datastore.remove done
+    database.things.remove done
 
   beforeEach ->
     @sut = new TokenManager {@uuidAliasResolver, @datastore, @cache, @pepper}
