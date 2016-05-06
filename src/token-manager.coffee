@@ -32,6 +32,8 @@ class TokenManager
   hashToken: ({uuid, token}, callback) =>
     return callback null, null unless uuid? and token?
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      return callback error if error?
+
       hasher = crypto.createHash 'sha256'
       hasher.update token
       hasher.update uuid
@@ -40,15 +42,21 @@ class TokenManager
 
   removeTokenFromCache: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      return callback error if error?
+
       @hashToken {uuid, token}, (error, hashedToken) =>
         @_clearHashedTokenFromCache uuid, hashedToken, callback
 
   removeHashedTokenFromCache: ({uuid, hashedToken}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      return callback error if error?
+
       @_clearHashedTokenFromCache uuid, hashedToken, callback
 
   revokeToken: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      return callback error if error?
+
       projection =
         uuid: true
       @datastore.findOne {uuid}, projection, (error, record) =>
@@ -64,6 +72,8 @@ class TokenManager
 
   revokeTokenByQuery: ({uuid, query}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      return callback error if error?
+
       projection =
         uuid: true
         'meshblu.tokens': true
@@ -71,7 +81,7 @@ class TokenManager
         return callback error if error?
         return callback null, false unless record?
 
-        hashedTokens = _.pick record.meshblu.tokens, (value) => _.some [value], query
+        hashedTokens = _.pickBy record.meshblu.tokens, (value) => _.some [value], query
         hashedTokenKeys = _.keys hashedTokens
         unsetHashTokens = _.mapKeys hashedTokens, (_, hashedToken) => "meshblu.tokens.#{hashedToken}"
         unsetHashTokens = _.mapValues unsetHashTokens, => true
@@ -83,6 +93,8 @@ class TokenManager
   verifyToken: ({uuid,token}, callback) =>
     return callback null, false unless uuid? and token?
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      return callback error if error?
+
       projection =
         uuid: true
         token: true

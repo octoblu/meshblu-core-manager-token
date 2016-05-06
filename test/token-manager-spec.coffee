@@ -168,7 +168,7 @@ describe 'TokenManager', ->
 
       describe 'when called with a valid query', ->
         beforeEach (done) ->
-          @sut.revokeTokenByQuery uuid: 'spiral', tag: 'hello', done
+          @sut.revokeTokenByQuery uuid: 'spiral', query: {tag: 'hello'}, done
 
         it 'should not have any tokens', (done) ->
           @datastore.findOne uuid: 'spiral', (error, device) =>
