@@ -49,7 +49,9 @@ class TokenManager
 
   revokeToken: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
-      @datastore.findOne {uuid}, (error, record) =>
+      projection =
+        uuid: true
+      @datastore.findOne {uuid}, projection, (error, record) =>
         return callback error if error?
         return callback null, false unless record?
         @hashToken {uuid, token}, (error, hashedToken) =>
@@ -62,7 +64,10 @@ class TokenManager
 
   revokeTokenByQuery: ({uuid, query}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
-      @datastore.findOne {uuid}, (error, record) =>
+      projection =
+        uuid: true
+        'meshblu.tokens': true
+      @datastore.findOne {uuid}, projection, (error, record) =>
         return callback error if error?
         return callback null, false unless record?
 
@@ -78,7 +83,11 @@ class TokenManager
   verifyToken: ({uuid,token}, callback) =>
     return callback null, false unless uuid? and token?
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
-      @datastore.findOne {uuid}, (error, record) =>
+      projection =
+        uuid: true
+        token: true
+        'meshblu.tokens': true
+      @datastore.findOne {uuid}, projection, (error, record) =>
         return callback error if error?
         return callback null, false unless record?
 

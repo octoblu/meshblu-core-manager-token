@@ -62,7 +62,7 @@ describe 'TokenManager', ->
         @sut.generateAndStoreToken uuid: 'spiral', done
 
       it 'should add a token to the datstore', (done) ->
-        @datastore.findOne {uuid: 'spiral'}, (error, device) =>
+        @datastore.findOne uuid: 'spiral', (error, device) =>
           return done error if error?
           expect(device.meshblu.tokens['T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=']).to.exist
           done()
@@ -80,7 +80,7 @@ describe 'TokenManager', ->
         @sut.generateAndStoreToken {uuid: 'spiral', data}, done
 
       it 'should add a token to the datstore', (done) ->
-        @datastore.findOne {uuid: 'spiral'}, (error, device) =>
+        @datastore.findOne uuid: 'spiral', (error, device) =>
           return done error if error?
           expect(device.meshblu.tokens['T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=']).to.exist
           expect(device.meshblu.tokens['T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='].tag).to.deep.equal 'foo'

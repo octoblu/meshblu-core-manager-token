@@ -1,10 +1,10 @@
 {
   "name": "meshblu-core-manager-token",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "description": "Meshblu Token Manager",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul cover _mocha -- -R spec"
+    "test": "istanbul cover _mocha -- -R spec --require coffee-coverage/register-istanbul"
   },
   "repository": {
     "type": "git",
@@ -26,7 +26,6 @@
     "fakeredis": "^1.0.2",
     "istanbul": "^0.4.0",
     "meshblu-core-cache": "^1.6.0",
-    "meshblu-core-datastore": "^3.0.0",
     "mocha": "^2.3.3",
     "mocha-istanbul": "^0.2.0",
     "mongojs": "^2.2.2",
@@ -37,6 +36,7 @@
   "dependencies": {
     "async": "^1.5.0",
     "bcrypt": "^0.8.5",
+    "meshblu-core-datastore": "^4.5.0",
     "uuid": "^2.0.1"
   }
 }
