@@ -64,7 +64,7 @@ class TokenManager
   revokeTokenByQuery: ({uuid, query}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-      theRealQuery = { uuid, hashedRootToken: { $exists: false }}
+      theRealQuery = @_getTokenQuery { uuid, root: false }
       _.each query, (value, key) =>
         theRealQuery["metadata.#{key}"] = value
       @datastore.find theRealQuery, (error, records) =>
@@ -78,13 +78,27 @@ class TokenManager
     return callback null, false unless uuid? and token?
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-      @datastore.find { uuid }, (error, records) =>
+      @_verifyHashedToken { uuid, token }, (error, valid) =>
         return callback error if error?
-        return callback null, false if _.isEmpty records
-        @_verifyRecords { uuid, token, records }, callback
+        return callback null, true if valid
+        @_verifyHashedRootToken { uuid, token }, callback
+
+  _verifyHashedToken: ({ uuid, token }, callback) =>
+    @_hashToken { uuid, token }, (error, hashedToken) =>
+      @datastore.findOne { uuid, hashedToken }, { uuid: true }, (error, record) =>
+        return callback error if error?
+        callback null, !!record
+
+  _verifyHashedRootToken: ({ uuid, token }, callback) =>
+    query = @_getTokenQuery { uuid, root: true }
+    @datastore.findOne query, (error, record) =>
+      return callback error if error?
+      return callback null, false unless record?
+      { hashedRootToken } = record
+      @_verifyRootToken { token, hashedRootToken }, callback
 
   _cleanUpRootTokens: ({ uuid }, callback) =>
-    query = { uuid, hashedRootToken: { $exists: true } }
+    query = @_getTokenQuery { uuid, root: true }
     @datastore.find query, (error, records) =>
       return callback error if error?
       @_clearHashedTokensFromCache records, (error) =>
@@ -99,6 +113,9 @@ class TokenManager
 
   _generateToken: =>
     return crypto.createHash('sha1').update((new Date()).valueOf().toString() + Math.random().toString()).digest('hex')
+
+  _getTokenQuery: ({ uuid, root }) =>
+    return { uuid, hashedRootToken: { $exists: root } }
 
   _hashToken: ({uuid, token}, callback) =>
     return callback null, null unless uuid? and token?
@@ -135,18 +152,5 @@ class TokenManager
     return callback null, false unless token?
     return callback null, false unless hashedRootToken?
     bcrypt.compare token, hashedRootToken, callback
-
-  _verifyRecords: ({ uuid, token, records }, callback) =>
-    return callback null, false unless token?
-    return callback null, false if _.isEmpty records
-    hashedTokens = _.compact _.map records, 'hashedToken'
-    hashedRootTokens = _.compact _.map records, 'hashedRootToken'
-    @_hashToken {uuid, token}, (error, hashedToken) =>
-      return callback error if error?
-      return callback null, false unless hashedToken?
-      return callback null, true if hashedToken in hashedTokens
-      verifyRootToken = (hashedRootToken, done) =>
-        @_verifyRootToken { token, hashedRootToken }, done
-      async.some hashedRootTokens, verifyRootToken, callback
 
 module.exports = TokenManager
