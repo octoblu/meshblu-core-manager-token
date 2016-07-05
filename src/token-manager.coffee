@@ -50,6 +50,13 @@ class TokenManager
       callback null, hasher.digest 'base64'
     , 0
 
+  checkTokenCache: ({ uuid, token }, callback) =>
+    @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      return callback error if error?
+      @hashToken { uuid, token }, (error, hashedToken) =>
+        return callback error if error?
+        @cache.exists "#{uuid}:#{hashedToken}", callback
+        
   removeTokenFromCache: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
@@ -127,7 +134,6 @@ class TokenManager
 
   _getTokenQuery: ({ uuid, root }) =>
     return { uuid, hashedRootToken: { $exists: root } }
-
 
   _hashRootToken: ({ token }, callback) =>
     bcrypt.hash token, 8, callback
