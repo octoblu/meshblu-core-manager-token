@@ -5,6 +5,9 @@ env:
 - CXX=g++-4.8
 services:
 - mongodb
+branches:
+  only:
+  - "/^v[0-9]/"
 addons:
   apt:
     sources:

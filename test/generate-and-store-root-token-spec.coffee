@@ -97,7 +97,7 @@ describe 'TokenManager->generateAndStoreRootToken', ->
           expect(@record.hashedToken).to.equal 'x3WkameywUX587Vuhr4I4U0F2rilHLW5aRh1xl5ZNIA='
 
         it 'should match the generated token', (done) ->
-          @sut._hashToken { uuid: 'spiral', token: 'this-the-real-token' }, (error, hashedToken) =>
+          @sut.hashToken { uuid: 'spiral', token: 'this-the-real-token' }, (error, hashedToken) =>
             return done error if error?
             expect(@record.hashedToken).to.equal hashedToken
             done()
@@ -152,7 +152,7 @@ describe 'TokenManager->generateAndStoreRootToken', ->
         expect(@record.hashedRootToken).to.exist
 
       it 'should match the generated token', (done) ->
-        @sut._hashToken { uuid: 'spiral', token: 'this-the-real-token' }, (error, hashedToken) =>
+        @sut.hashToken { uuid: 'spiral', token: 'this-the-real-token' }, (error, hashedToken) =>
           return done error if error?
           expect(@record.hashedToken).to.equal hashedToken
           done()

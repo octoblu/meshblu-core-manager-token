@@ -43,7 +43,7 @@ describe 'TokenManager->generateAndStoreToken', ->
         expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
 
       it 'should match the generated token', (done) ->
-        @sut._hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
+        @sut.hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
           return done error if error?
           expect(@record.hashedToken).to.equal hashedToken
           done()
@@ -74,7 +74,7 @@ describe 'TokenManager->generateAndStoreToken', ->
           expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
 
         it 'should match the generated token', (done) ->
-          @sut._hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
+          @sut.hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
             return done error if error?
             expect(@record.hashedToken).to.equal hashedToken
             done()
@@ -105,7 +105,7 @@ describe 'TokenManager->generateAndStoreToken', ->
           expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
 
         it 'should match the generated hashedToken', (done) ->
-          @sut._hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
+          @sut.hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
             return done error if error?
             expect(@record.hashedToken).to.equal hashedToken
             done()

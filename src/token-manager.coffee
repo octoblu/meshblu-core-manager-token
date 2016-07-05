@@ -10,7 +10,7 @@ class TokenManager
   generateAndStoreTokenInCache: ({uuid, expireSeconds}, callback) =>
     token = @_generateToken()
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
-      @_hashToken {uuid, token}, (error, hashedToken) =>
+      @hashToken {uuid, token}, (error, hashedToken) =>
         return callback error if error?
         @_storeHashedTokenInCache {uuid, hashedToken, expireSeconds}, (error) =>
           return callback error if error?
@@ -20,7 +20,7 @@ class TokenManager
     metadata ?= data
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       token = @_generateToken()
-      @_hashToken {uuid, token}, (error, hashedToken) =>
+      @hashToken {uuid, token}, (error, hashedToken) =>
         return callback error if error?
         @_storeHashedToken {uuid, hashedToken, metadata}, (error) =>
           return callback error if error?
@@ -32,17 +32,28 @@ class TokenManager
       @_cleanUpRootTokens { uuid }, (error) =>
         return callback error if error?
         token = @_generateToken()
-        @_hashToken { uuid, token }, (error, hashedToken) =>
+        @hashToken { uuid, token }, (error, hashedToken) =>
+          return callback error if error?
           @_hashRootToken { token }, (error, hashedRootToken) =>
             return callback error if error?
             @_storeHashedToken {uuid, hashedToken, hashedRootToken}, (error) =>
               return callback error if error?
               callback null, token
 
+  hashToken: ({uuid, token}, callback) =>
+    return callback null, null unless uuid? and token?
+    _.delay =>
+      hasher = crypto.createHash 'sha256'
+      hasher.update token
+      hasher.update uuid
+      hasher.update @pepper
+      callback null, hasher.digest 'base64'
+    , 0
+
   removeTokenFromCache: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-      @_hashToken {uuid, token}, (error, hashedToken) =>
+      @hashToken {uuid, token}, (error, hashedToken) =>
         @_clearHashedTokenFromCache {uuid, hashedToken}, callback
 
   removeHashedTokenFromCache: ({uuid, hashedToken}, callback) =>
@@ -53,7 +64,7 @@ class TokenManager
   revokeToken: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-      @_hashToken {uuid, token}, (error, hashedToken) =>
+      @hashToken {uuid, token}, (error, hashedToken) =>
         return callback error if error?
         @datastore.remove {uuid, hashedToken}, (error) =>
           return callback error if error?
@@ -84,7 +95,7 @@ class TokenManager
         @_verifyHashedRootToken { uuid, token }, callback
 
   _verifyHashedToken: ({ uuid, token }, callback) =>
-    @_hashToken { uuid, token }, (error, hashedToken) =>
+    @hashToken { uuid, token }, (error, hashedToken) =>
       @datastore.findOne { uuid, hashedToken }, { uuid: true }, (error, record) =>
         return callback error if error?
         callback null, !!record
@@ -117,15 +128,6 @@ class TokenManager
   _getTokenQuery: ({ uuid, root }) =>
     return { uuid, hashedRootToken: { $exists: root } }
 
-  _hashToken: ({uuid, token}, callback) =>
-    return callback null, null unless uuid? and token?
-    _.delay =>
-      hasher = crypto.createHash 'sha256'
-      hasher.update token
-      hasher.update uuid
-      hasher.update @pepper
-      callback null, hasher.digest 'base64'
-    , 0
 
   _hashRootToken: ({ token }, callback) =>
     bcrypt.hash token, 8, callback
