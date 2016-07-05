@@ -27,7 +27,7 @@ describe 'TokenManager->generateAndStoreTokenInCache', ->
 
   describe 'when called without options', ->
     beforeEach (done) ->
-      @sut.generateToken = sinon.stub().returns('abc123')
+      @sut._generateToken = sinon.stub().returns('abc123')
       @sut.generateAndStoreTokenInCache uuid: 'spiral', done
 
     it 'should add a token to the cache', (done) ->
@@ -37,7 +37,7 @@ describe 'TokenManager->generateAndStoreTokenInCache', ->
 
   describe 'when called with options', ->
     beforeEach (done) ->
-      @sut.generateToken = sinon.stub().returns('abc123')
+      @sut._generateToken = sinon.stub().returns('abc123')
       @sut.generateAndStoreTokenInCache uuid: 'spiral', expireSeconds: 1, done
 
     it 'should add a token to the cache', (done) ->

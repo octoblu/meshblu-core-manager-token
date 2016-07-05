@@ -30,16 +30,14 @@ describe 'TokenManager->revokeTokenByQuery', ->
       records = [
         {
           uuid: 'spiral'
-          token: 'U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU='
-          root: false
+          hashedToken: 'U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU='
           metadata:
             createdAt: new Date()
             tag: 'hello'
         }
         {
           uuid: 'spiral'
-          token: 'PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8='
-          root: false
+          hashedToken: 'PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8='
           metadata:
             createdAt: new Date(Date.now() - (1000 * 60))
             services: ['super', 'lame', 'awesome']
@@ -47,8 +45,8 @@ describe 'TokenManager->revokeTokenByQuery', ->
         }
         {
           uuid: 'spiral'
-          token: 'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
-          root: true
+          hashedToken: 'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
+          hashedRootToken: 'this-is-something-crazy'
           metadata:
             createdAt: new Date()
             tag: 'hello'
@@ -69,8 +67,8 @@ describe 'TokenManager->revokeTokenByQuery', ->
 
       it 'should have only the root token', (done) ->
         @datastore.find { uuid: 'spiral' }, (error, records) =>
-          tokens = _.map records, 'token'
-          expect(tokens).to.deep.equal [
+          hashedTokens = _.map records, 'hashedToken'
+          expect(hashedTokens).to.deep.equal [
             'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
           ]
           done()
@@ -93,8 +91,8 @@ describe 'TokenManager->revokeTokenByQuery', ->
 
       it 'should have only the root token', (done) ->
         @datastore.find { uuid: 'spiral' }, (error, records) =>
-          tokens = _.map records, 'token'
-          expect(tokens).to.deep.equal [
+          hashedTokens = _.map records, 'hashedToken'
+          expect(hashedTokens).to.deep.equal [
             'PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8='
             'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
           ]
@@ -113,8 +111,8 @@ describe 'TokenManager->revokeTokenByQuery', ->
 
       it 'should have only the root token', (done) ->
         @datastore.find { uuid: 'spiral' }, (error, records) =>
-          tokens = _.map records, 'token'
-          expect(tokens).to.deep.equal [
+          hashedTokens = _.map records, 'hashedToken'
+          expect(hashedTokens).to.deep.equal [
             'U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU='
             'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
           ]

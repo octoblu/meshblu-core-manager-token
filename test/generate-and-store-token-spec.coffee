@@ -30,29 +30,26 @@ describe 'TokenManager->generateAndStoreToken', ->
 
   describe 'when called without options', ->
     beforeEach (done) ->
-      @sut.generateToken = sinon.stub().returns('abc123')
-      @sut.generateAndStoreToken uuid: 'spiral', (error, @generateToken) =>
+      @sut._generateToken = sinon.stub().returns 'abc123'
+      @sut.generateAndStoreToken {uuid: 'spiral'}, (error, @generateToken) =>
         done error
 
     describe 'when the record is retrieved', ->
       beforeEach (done) ->
-        @datastore.findOne { uuid: 'spiral', token: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=' }, (error, @record) =>
+        @datastore.findOne { uuid: 'spiral', hashedToken: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=' }, (error, @record) =>
           done error
 
       it 'should add a token to the datastore', ->
-        expect(@record.token).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
+        expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
 
       it 'should match the generated token', (done) ->
-        @sut.hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
+        @sut._hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
           return done error if error?
-          expect(@record.token).to.equal hashedToken
+          expect(@record.hashedToken).to.equal hashedToken
           done()
 
       it 'should have the correct metadata in the datastore', ->
         expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
-
-      it 'should be a session token', ->
-        expect(@record.root).to.be.false
 
     it 'should add a token to the cache', (done) ->
       @cache.exists 'spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=', (error, result) =>
@@ -60,35 +57,64 @@ describe 'TokenManager->generateAndStoreToken', ->
         done()
 
   describe 'when called with options', ->
-    beforeEach (done) ->
-      @sut.generateToken = sinon.stub().returns('abc123')
-      data =
-        tag: 'foo'
-      @sut.generateAndStoreToken {uuid: 'spiral', data}, (error, @generateToken) =>
-        done error
-
-    describe 'when the record is retrieved', ->
+    describe 'when called with metadata', ->
       beforeEach (done) ->
-        @datastore.findOne { uuid: 'spiral', token: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=' }, (error, @record) =>
+        @sut._generateToken = sinon.stub().returns('abc123')
+        metadata =
+          tag: 'foo'
+        @sut.generateAndStoreToken {uuid: 'spiral', metadata}, (error, @generateToken) =>
           done error
 
-      it 'should add a token to the datastore', ->
-        expect(@record.token).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
+      describe 'when the record is retrieved', ->
+        beforeEach (done) ->
+          @datastore.findOne { uuid: 'spiral', hashedToken: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=' }, (error, @record) =>
+            done error
 
-      it 'should match the generated token', (done) ->
-        @sut.hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
-          return done error if error?
-          expect(@record.token).to.equal hashedToken
+        it 'should add a hashedToken to the datastore', ->
+          expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
+
+        it 'should match the generated token', (done) ->
+          @sut._hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
+            return done error if error?
+            expect(@record.hashedToken).to.equal hashedToken
+            done()
+
+        it 'should have the correct metadata in the datastore', ->
+          expect(@record.metadata.tag).to.equal 'foo'
+          expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
+
+      it 'should add a token to the cache', (done) ->
+        @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+          expect(result).to.be.true
           done()
 
-      it 'should have the correct metadata in the datastore', ->
-        expect(@record.metadata.tag).to.equal 'foo'
-        expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
+    describe 'when called with data (backwards compability)', ->
+      beforeEach (done) ->
+        @sut._generateToken = sinon.stub().returns('abc123')
+        data =
+          tag: 'foo'
+        @sut.generateAndStoreToken {uuid: 'spiral', data}, (error, @generateToken) =>
+          done error
 
-      it 'should be a session token', ->
-        expect(@record.root).to.be.false
+      describe 'when the record is retrieved', ->
+        beforeEach (done) ->
+          @datastore.findOne { uuid: 'spiral', hashedToken: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=' }, (error, @record) =>
+            done error
 
-    it 'should add a token to the cache', (done) ->
-      @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
-        expect(result).to.be.true
-        done()
+        it 'should add a token to the datastore', ->
+          expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
+
+        it 'should match the generated hashedToken', (done) ->
+          @sut._hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
+            return done error if error?
+            expect(@record.hashedToken).to.equal hashedToken
+            done()
+
+        it 'should have the correct metadata in the datastore', ->
+          expect(@record.metadata.tag).to.equal 'foo'
+          expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
+
+      it 'should add a token to the cache', (done) ->
+        @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>
+          expect(result).to.be.true
+          done()

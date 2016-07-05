@@ -29,8 +29,34 @@ describe 'TokenManager->verifyToken', ->
     beforeEach (done) ->
       record =
         uuid: 'supergirl'
-        token: '$2a$08$6BM2wY4bEmyIvQ7fjrh.zuXyYnahukgTjT4rWSH0Q6fRzIVDKafAW'
-        root: true
+        hashedToken: 'Z4NmWm4cbjlQGcN1ntf+McpNgccLcblAnpz889zUw4I='
+        hashedRootToken: 'this-will-not-work'
+        metadata:
+          createdAt: new Date()
+      @datastore.insert record, done
+
+    describe 'when called with the correct token', ->
+      beforeEach (done) ->
+        @sut.verifyToken uuid: 'supergirl', token: 'MEAT GRINDER', (error, @result) =>
+          done error
+
+      it 'should yield true', ->
+        expect(@result).to.be.true
+
+    describe 'when called with the incorrect token', ->
+      beforeEach (done) ->
+        @sut.verifyToken uuid: 'supergirl', token: 'incorrect', (error, @result) =>
+          done error
+
+      it 'should yield false', ->
+        expect(@result).to.be.false
+
+  describe 'when uuid "uuid" has the root token "MEAT GRINDER" and has an invalid session token version', ->
+    beforeEach (done) ->
+      record =
+        uuid: 'supergirl'
+        hashedToken: 'this-will-not-work'
+        hashedRootToken: '$2a$08$6BM2wY4bEmyIvQ7fjrh.zuXyYnahukgTjT4rWSH0Q6fRzIVDKafAW'
         metadata:
           createdAt: new Date()
       @datastore.insert record, done
@@ -63,8 +89,7 @@ describe 'TokenManager->verifyToken', ->
     beforeEach (done) ->
       @datastore.insert
         uuid: 'superperson'
-        token: 'not-even-a-hash'
-        root: true
+        hashedToken: 'not-even-a-hash'
         metadata:
           createdAt: new Date()
       , done
@@ -80,8 +105,7 @@ describe 'TokenManager->verifyToken', ->
     beforeEach (done) ->
       record =
         uuid: 'superman'
-        token: 'd5/NnLFR29SDb6d7AXTj8Jx+efETnN1JBQaknjF6vDA='
-        root: false
+        hashedToken: 'd5/NnLFR29SDb6d7AXTj8Jx+efETnN1JBQaknjF6vDA='
         metadata:
           createdAt: new Date()
 

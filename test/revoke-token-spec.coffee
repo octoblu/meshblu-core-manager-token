@@ -30,15 +30,14 @@ describe 'TokenManager->revokeToken', ->
       records = [
         {
           uuid: 'spiral'
-          token: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
-          root: false
+          hashedToken: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
           metadata:
             createdAt: new Date()
         }
         {
           uuid: 'spiral'
-          token: 'GQv7F9G0GsV3JvEewG+FDkE2G0dGKAi7/W3Ss7QQmgI='
-          root: true
+          hashedToken: 'GQv7F9G0GsV3JvEewG+FDkE2G0dGKAi7/W3Ss7QQmgI='
+          hashedRootToken: 'this-is-something-crazy'
           metadata:
             createdAt: new Date()
         }
@@ -51,12 +50,12 @@ describe 'TokenManager->revokeToken', ->
 
     describe 'when called with a valid query', ->
       beforeEach (done) ->
-        @sut.revokeToken uuid: 'spiral', token: 'abc123', done
+        @sut.revokeToken {uuid: 'spiral', token: 'abc123'}, done
 
       it 'should have only the token', (done) ->
         @datastore.find uuid: 'spiral', (error, records) =>
-          tokens = _.map records, 'token'
-          expect(tokens).to.deep.equal [
+          hashedTokens = _.map records, 'hashedToken'
+          expect(hashedTokens).to.deep.equal [
             'GQv7F9G0GsV3JvEewG+FDkE2G0dGKAi7/W3Ss7QQmgI='
           ]
           done()

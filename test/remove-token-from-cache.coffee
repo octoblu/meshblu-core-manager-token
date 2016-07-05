@@ -29,7 +29,7 @@ describe 'TokenManager->removeTokenFromCache', ->
     @cache.set "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", '', done
 
   beforeEach (done) ->
-    @sut.removeTokenFromCache uuid: 'spiral', token: 'abc123', done
+    @sut.removeTokenFromCache {uuid: 'spiral', token: 'abc123'}, done
 
   it 'should remove the token from the cache', (done) ->
     @cache.exists "spiral:T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=", (error, result) =>

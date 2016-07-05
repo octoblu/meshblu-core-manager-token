@@ -15,24 +15,22 @@ tokens = [
   # Root token record
   {
     uuid: 'some-uuid'
-    token: 'root-hashed-token'
-    root: true
+    hashedToken: 'root-hashed-token'
+    hashedRootToken: 'non-deterministic-hashed-token'
     metadata:
       createdAt: new Date()
   }
   # Normal session token record
   {
     uuid: 'some-uuid'
-    token: 'hashed-token'
-    root: false
+    hashedToken: 'hashed-token'
     metadata:
       createdAt: new Date()
   }
   # Session token record with custom tags
   {
     uuid: 'some-uuid'
-    token: 'hashed-token'
-    root: false
+    hashedToken: 'hashed-token'
     metadata:
       tag: 'some-custom-tag'
       random: 'property'
