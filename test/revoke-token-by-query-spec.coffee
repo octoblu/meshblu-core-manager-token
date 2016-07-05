@@ -41,7 +41,8 @@ describe 'TokenManager->revokeTokenByQuery', ->
           token: 'PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8='
           root: false
           metadata:
-            createdAt: new Date()
+            createdAt: new Date(Date.now() - (1000 * 60))
+            services: ['super', 'lame', 'awesome']
             tag: 'hello'
         }
         {
@@ -67,7 +68,7 @@ describe 'TokenManager->revokeTokenByQuery', ->
           done error
 
       it 'should have only the root token', (done) ->
-        @datastore.find {uuid: 'spiral', 'metadata.tag': 'hello' }, (error, records) =>
+        @datastore.find { uuid: 'spiral' }, (error, records) =>
           tokens = _.map records, 'token'
           expect(tokens).to.deep.equal [
             'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
@@ -80,6 +81,46 @@ describe 'TokenManager->revokeTokenByQuery', ->
           done()
 
       it 'should remove the token 2 from the cache', (done) ->
+        @cache.exists 'spiral:PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8=', (error, result) =>
+          expect(result).to.be.false
+          done()
+
+    describe 'when called with a date query', ->
+      beforeEach (done) ->
+        thirtySecondsAgo = new Date(Date.now() - (1000 * 30))
+        @sut.revokeTokenByQuery { uuid: 'spiral', query: createdAt: { $gt: thirtySecondsAgo } }, (error) =>
+          done error
+
+      it 'should have only the root token', (done) ->
+        @datastore.find { uuid: 'spiral' }, (error, records) =>
+          tokens = _.map records, 'token'
+          expect(tokens).to.deep.equal [
+            'PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8='
+            'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
+          ]
+          done()
+
+      it 'should remove the token 1 from the cache', (done) ->
+        @cache.exists 'spiral:U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU=', (error, result) =>
+          expect(result).to.be.false
+          done()
+
+    describe 'when called with a complex query', ->
+      beforeEach (done) ->
+        thirtySecondsAgo = new Date(Date.now() - (1000 * 30))
+        @sut.revokeTokenByQuery {uuid: 'spiral', query: { services: { $in: ['super'] } }}, (error) =>
+          done error
+
+      it 'should have only the root token', (done) ->
+        @datastore.find { uuid: 'spiral' }, (error, records) =>
+          tokens = _.map records, 'token'
+          expect(tokens).to.deep.equal [
+            'U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU='
+            'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
+          ]
+          done()
+
+      it 'should remove the token 1 from the cache', (done) ->
         @cache.exists 'spiral:PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8=', (error, result) =>
           expect(result).to.be.false
           done()
