@@ -23,7 +23,7 @@ class TokenManager
     token = @generateToken()
     @hashToken {uuid, token}, (error, hashedToken) =>
       return callback error if error?
-      @_storeHashedToken {uuid, hashedToken, data}, (error) =>
+      @_storeHashedToken {uuid, token: hashedToken, metadata: data}, (error) =>
         return callback error if error?
         @_storeHashedTokenInCache {uuid, hashedToken}, (error) =>
           return callback error if error?
@@ -56,69 +56,57 @@ class TokenManager
   revokeToken: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-
-      projection =
-        uuid: true
-      @datastore.findOne {uuid}, projection, (error, record) =>
+      @hashToken {uuid, token}, (error, hashedToken) =>
         return callback error if error?
-        return callback null, false unless record?
-        @hashToken {uuid, token}, (error, hashedToken) =>
+        @datastore.remove {uuid, token: hashedToken}, (error) =>
           return callback error if error?
-          @datastore.update {uuid}, $unset : {"meshblu.tokens.#{hashedToken}"}, (error) =>
+          @_clearHashedTokenFromCache uuid, hashedToken, (error) =>
             return callback error if error?
-            @_clearHashedTokenFromCache uuid, hashedToken, (error) =>
-              return callback error if error?
-              callback null, true
+            callback null, true
 
   revokeTokenByQuery: ({uuid, query}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-
-      projection =
-        uuid: true
-        'meshblu.tokens': true
-      @datastore.findOne {uuid}, projection, (error, record) =>
+      theRealQuery = {uuid, root: false}
+      _.each query, (value, key) =>
+        theRealQuery["metadata.#{key}"] = value
+      @datastore.find theRealQuery, (error, records) =>
         return callback error if error?
-        return callback null, false unless record?
-
-        hashedTokens = _.pickBy record.meshblu.tokens, (value) => _.some [value], query
-        hashedTokenKeys = _.keys hashedTokens
-        unsetHashTokens = _.mapKeys hashedTokens, (_, hashedToken) => "meshblu.tokens.#{hashedToken}"
-        unsetHashTokens = _.mapValues unsetHashTokens, => true
-
-        return callback null unless _.size hashedTokenKeys
-        @_clearHashedTokensFromCache uuid, hashedTokenKeys, =>
-          @datastore.update {uuid}, $unset: unsetHashTokens, callback
+        return callback null, false if _.isEmpty records
+        tokens = _.map records, 'token'
+        @_clearHashedTokensFromCache uuid, tokens, (error) =>
+          return callback error if error?
+          @datastore.remove theRealQuery, callback
 
   verifyToken: ({uuid,token}, callback) =>
     return callback null, false unless uuid? and token?
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-
-      projection =
-        uuid: true
-        token: true
-        'meshblu.tokens': true
-      @datastore.findOne {uuid}, projection, (error, record) =>
+      @datastore.find {uuid}, (error, records) =>
         return callback error if error?
-        return callback null, false unless record?
-
-        @_verifySessionToken token, record, (error,valid) =>
+        return callback null, false if _.isEmpty records
+        sessionTokens = _.filter records, { root: false }
+        hashedTokens = _.map sessionTokens, 'token'
+        @_verifySessionToken { uuid, token, hashedTokens }, (error, valid) =>
           return callback error if error?
           return callback null, valid if valid
-
-          @_verifyRootToken token, record.token, callback
+          rootTokenRecord = _.find records, { root: true }
+          return callback null, false unless rootTokenRecord?
+          @_verifyRootToken token, rootTokenRecord.token, callback
 
   _clearHashedTokensFromCache: (uuid, hashedTokens, callback) =>
-    async.each hashedTokens, async.apply(@_clearHashedTokenFromCache, uuid), callback
+    clearCache = async.apply @_clearHashedTokenFromCache, uuid
+    async.eachSeries hashedTokens, clearCache, callback
 
   _clearHashedTokenFromCache: (uuid, hashedToken, done) =>
     @cache.del "#{uuid}:#{hashedToken}", done
 
-  _storeHashedToken: ({uuid, hashedToken, data}, callback) =>
-    data ?= {}
-    data.createdAt = new Date()
-    @datastore.update {uuid}, $set: {"meshblu.tokens.#{hashedToken}" : data}, callback
+  _storeHashedToken: ({uuid, token, metadata}, callback) =>
+    record = { uuid, token, root: false }
+    record.metadata = metadata if _.isPlainObject metadata
+    record.metadata ?= {}
+    record.metadata.createdAt = new Date()
+    @datastore.insert record, callback
 
   _storeHashedTokenInCache: ({uuid, hashedToken, expireSeconds}, callback) =>
     if expireSeconds?
@@ -130,12 +118,12 @@ class TokenManager
     return callback null, false unless token? and hashedToken?
     bcrypt.compare token, hashedToken, callback
 
-  _verifySessionToken: (token, record, callback) =>
-    return callback null, false unless token? and record.meshblu?.tokens?
-    @hashToken {uuid: record.uuid, token}, (error, hashedToken) =>
+  _verifySessionToken: ({ uuid, token, hashedTokens }, callback) =>
+    return callback null, false unless token?
+    return callback null, false if _.isEmpty hashedTokens
+    @hashToken {uuid, token}, (error, hashedToken) =>
       return callback error if error?
       return callback null, false unless hashedToken?
-      hashedTokens = record.meshblu.tokens
-      callback null, hashedTokens[hashedToken]?
+      callback null, hashedToken in hashedTokens
 
 module.exports = TokenManager
