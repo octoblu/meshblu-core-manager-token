@@ -1,27 +1,25 @@
 _      = require 'lodash'
 bcrypt = require 'bcrypt'
 crypto = require 'crypto'
-async  = require 'async'
 
 class TokenManager
   constructor: ({@datastore,@pepper,@uuidAliasResolver}) ->
     throw new Error "Missing mandatory parameter: @pepper" if _.isEmpty @pepper
 
-  generateAndStoreToken: ({uuid, data, metadata}, callback) =>
-    metadata ?= data
+  generateAndStoreToken: ({ uuid, metadata, expiresOn }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       token = @_generateToken()
       @_hashToken {uuid, token}, (error, hashedToken) =>
         return callback error if error?
-        @_storeHashedToken {uuid, hashedToken, metadata}, (error) =>
+        @_storeHashedToken { uuid, hashedToken, metadata, expiresOn }, (error) =>
           return callback error if error?
           callback null, token
 
-  storeToken: ({ uuid, token }, callback) =>
+  storeToken: ({ uuid, token, expiresOn }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       @_hashToken {uuid, token}, (error, hashedToken) =>
         return callback error if error?
-        @_storeHashedToken { uuid, hashedToken }, (error) =>
+        @_storeHashedToken { uuid, hashedToken, expiresOn }, (error) =>
           return callback error if error?
           callback null
 
@@ -30,7 +28,7 @@ class TokenManager
       return callback error if error?
       @_hashToken {uuid, token}, (error, hashedToken) =>
         return callback error if error?
-        @datastore.remove {uuid, hashedToken}, (error) =>
+        @datastore.remove { uuid, hashedToken }, (error) =>
           return callback error if error?
           callback null, true
 
@@ -63,8 +61,10 @@ class TokenManager
       callback null, hasher.digest 'base64'
     , 0
 
-  _storeHashedToken: ({ uuid, hashedToken, metadata }, callback) =>
+  _storeHashedToken: ({ uuid, hashedToken, metadata, expiresOn }, callback) =>
     record = { uuid, hashedToken }
+    return callback new Error('expires on must be a date') if expiresOn? && !_.isDate(expiresOn)
+    record.expiresOn = expiresOn if expiresOn?
     record.metadata = metadata if _.isPlainObject metadata
     record.metadata ?= {}
     record.metadata.createdAt = new Date()
@@ -72,7 +72,16 @@ class TokenManager
 
   _verifyHashedToken: ({ uuid, token }, callback) =>
     @_hashToken { uuid, token }, (error, hashedToken) =>
-      @datastore.findOne { uuid, hashedToken }, { uuid: true }, (error, record) =>
+      query = { uuid, hashedToken }
+      query.$or = [
+        {
+          expiresOn: { $exists: true, $gte: new Date() }
+        },
+        {
+          expiresOn: { $exists: false }
+        }
+      ]
+      @datastore.findOne query, { uuid: true }, (error, record) =>
         return callback error if error?
         callback null, !!record
 

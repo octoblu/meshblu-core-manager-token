@@ -43,6 +43,23 @@ describe 'TokenManager->verifyToken', ->
     it 'should yield false', ->
       expect(@result).to.be.false
 
+  describe 'when the token is expired', ->
+    beforeEach (done) ->
+      @datastore.insert
+        uuid: 'superperson'
+        hashedToken: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
+        expiresOn: new Date(Date.now() - (1000 * 60))
+        metadata:
+          createdAt: new Date()
+      , done
+
+    beforeEach (done) ->
+      @sut.verifyToken uuid: 'superperson', token: 'abc123', (error, @result) =>
+        done error
+
+    it 'should yield false', ->
+      expect(@result).to.be.false
+
   describe 'when uuid "uuid" has the session token "POPPED"', ->
     beforeEach (done) ->
       record =

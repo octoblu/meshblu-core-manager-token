@@ -30,3 +30,8 @@ tokens = [
   }
 ]
 ```
+
+
+## Tokens collection indexes
+
+uuid, hashedToken, expiresOn

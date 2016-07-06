@@ -1,6 +1,6 @@
 {
   "name": "meshblu-core-manager-token",
-  "version": "7.1.0",
+  "version": "7.2.0",
   "description": "Meshblu Token Manager",
   "main": "index.js",
   "scripts": {
@@ -30,7 +30,6 @@
     "sinon-chai": "^2.8.0"
   },
   "dependencies": {
-    "async": "2.0.0-rc.6",
     "bcrypt": "^0.8.7",
     "coffee-script": "^1.10.0",
     "lodash": "^4.11.2",
