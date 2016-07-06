@@ -1,29 +1,23 @@
 _         = require 'lodash'
 bcrypt    = require 'bcrypt'
 crypto    = require 'crypto'
-uuid      = require 'uuid'
-redis     = require 'fakeredis'
 mongojs   = require 'mongojs'
 Datastore = require 'meshblu-core-datastore'
-Cache     = require 'meshblu-core-cache'
 
 TokenManager = require '../src/token-manager'
 
 describe 'TokenManager->revokeTokenByQuery', ->
   beforeEach (done) ->
-    @redisKey = uuid.v1()
     @pepper = 'im-a-pepper'
     @uuidAliasResolver = resolve: (uuid, callback) => callback(null, uuid)
     database = mongojs 'token-manager-test', ['things']
     @datastore = new Datastore
       database: database
       collection: 'things'
-    @cache = new Cache
-      client: redis.createClient @redisKey
     database.things.remove done
 
   beforeEach ->
-    @sut = new TokenManager {@uuidAliasResolver, @datastore, @cache, @pepper}
+    @sut = new TokenManager {@uuidAliasResolver, @datastore, @pepper}
 
   describe 'when tagged tokens are inserted', ->
     beforeEach (done) ->
@@ -46,12 +40,6 @@ describe 'TokenManager->revokeTokenByQuery', ->
       ]
       @datastore.insert records, done
 
-    beforeEach (done) ->
-      @cache.set "spiral:U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU=", 'set', done
-
-    beforeEach (done) ->
-      @cache.set "spiral:PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8=", 'set', done
-
     describe 'when called with a valid query', ->
       beforeEach (done) ->
         @sut.revokeTokenByQuery {uuid: 'spiral', query: {tag: 'hello'}}, (error) =>
@@ -60,16 +48,6 @@ describe 'TokenManager->revokeTokenByQuery', ->
       it 'should have no tokens', (done) ->
         @datastore.find { uuid: 'spiral' }, (error, records) =>
           expect(records.length).to.equal 0
-          done()
-
-      it 'should remove the token 1 from the cache', (done) ->
-        @cache.exists 'spiral:U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU=', (error, result) =>
-          expect(result).to.be.false
-          done()
-
-      it 'should remove the token 2 from the cache', (done) ->
-        @cache.exists 'spiral:PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8=', (error, result) =>
-          expect(result).to.be.false
           done()
 
     describe 'when called with a date query', ->
@@ -86,14 +64,8 @@ describe 'TokenManager->revokeTokenByQuery', ->
           ]
           done()
 
-      it 'should remove the token 1 from the cache', (done) ->
-        @cache.exists 'spiral:U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU=', (error, result) =>
-          expect(result).to.be.false
-          done()
-
     describe 'when called with a complex query', ->
       beforeEach (done) ->
-        thirtySecondsAgo = new Date(Date.now() - (1000 * 30))
         @sut.revokeTokenByQuery {uuid: 'spiral', query: { services: { $in: ['super'] } }}, (error) =>
           done error
 
@@ -102,7 +74,12 @@ describe 'TokenManager->revokeTokenByQuery', ->
           expect(records.length).to.equal 1
           done()
 
-      it 'should remove the token 1 from the cache', (done) ->
-        @cache.exists 'spiral:PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8=', (error, result) =>
-          expect(result).to.be.false
+    describe 'when called with a weird key value in the query', ->
+      beforeEach (done) ->
+        @sut.revokeTokenByQuery {uuid: 'spiral', query: { "something crazy yes" : true }}, (error) =>
+          done error
+
+      it 'should have no tokens', (done) ->
+        @datastore.find { uuid: 'spiral' }, (error, records) =>
+          expect(records.length).to.equal 2
           done()
