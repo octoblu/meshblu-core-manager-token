@@ -25,58 +25,6 @@ describe 'TokenManager->verifyToken', ->
   beforeEach ->
     @sut = new TokenManager {@uuidAliasResolver, @datastore, @cache, @pepper}
 
-  describe 'when uuid "uuid" has the root token "MEAT GRINDER"', ->
-    beforeEach (done) ->
-      record =
-        uuid: 'supergirl'
-        hashedToken: 'Z4NmWm4cbjlQGcN1ntf+McpNgccLcblAnpz889zUw4I='
-        hashedRootToken: 'this-will-not-work'
-        metadata:
-          createdAt: new Date()
-      @datastore.insert record, done
-
-    describe 'when called with the correct token', ->
-      beforeEach (done) ->
-        @sut.verifyToken uuid: 'supergirl', token: 'MEAT GRINDER', (error, @result) =>
-          done error
-
-      it 'should yield true', ->
-        expect(@result).to.be.true
-
-    describe 'when called with the incorrect token', ->
-      beforeEach (done) ->
-        @sut.verifyToken uuid: 'supergirl', token: 'incorrect', (error, @result) =>
-          done error
-
-      it 'should yield false', ->
-        expect(@result).to.be.false
-
-  describe 'when uuid "uuid" has the root token "MEAT GRINDER" and has an invalid session token version', ->
-    beforeEach (done) ->
-      record =
-        uuid: 'supergirl'
-        hashedToken: 'this-will-not-work'
-        hashedRootToken: '$2a$08$6BM2wY4bEmyIvQ7fjrh.zuXyYnahukgTjT4rWSH0Q6fRzIVDKafAW'
-        metadata:
-          createdAt: new Date()
-      @datastore.insert record, done
-
-    describe 'when called with the correct token', ->
-      beforeEach (done) ->
-        @sut.verifyToken uuid: 'supergirl', token: 'MEAT GRINDER', (error, @result) =>
-          done error
-
-      it 'should yield true', ->
-        expect(@result).to.be.true
-
-    describe 'when called with the incorrect token', ->
-      beforeEach (done) ->
-        @sut.verifyToken uuid: 'supergirl', token: 'incorrect', (error, @result) =>
-          done error
-
-      it 'should yield false', ->
-        expect(@result).to.be.false
-
   describe 'when called with an invalid uuid', ->
     beforeEach (done) ->
       @sut.verifyToken uuid: 'not-supergirl', token: 'token', (error, @result) =>
@@ -85,7 +33,7 @@ describe 'TokenManager->verifyToken', ->
     it 'should yield false', ->
       expect(@result).to.be.false
 
-  describe 'when the root token is invalid', ->
+  describe 'when the token is invalid', ->
     beforeEach (done) ->
       @datastore.insert
         uuid: 'superperson'

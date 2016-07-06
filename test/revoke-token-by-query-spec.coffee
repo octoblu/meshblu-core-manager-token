@@ -43,14 +43,6 @@ describe 'TokenManager->revokeTokenByQuery', ->
             services: ['super', 'lame', 'awesome']
             tag: 'hello'
         }
-        {
-          uuid: 'spiral'
-          hashedToken: 'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
-          hashedRootToken: 'this-is-something-crazy'
-          metadata:
-            createdAt: new Date()
-            tag: 'hello'
-        }
       ]
       @datastore.insert records, done
 
@@ -65,12 +57,9 @@ describe 'TokenManager->revokeTokenByQuery', ->
         @sut.revokeTokenByQuery {uuid: 'spiral', query: {tag: 'hello'}}, (error) =>
           done error
 
-      it 'should have only the root token', (done) ->
+      it 'should have no tokens', (done) ->
         @datastore.find { uuid: 'spiral' }, (error, records) =>
-          hashedTokens = _.map records, 'hashedToken'
-          expect(hashedTokens).to.deep.equal [
-            'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
-          ]
+          expect(records.length).to.equal 0
           done()
 
       it 'should remove the token 1 from the cache', (done) ->
@@ -89,12 +78,11 @@ describe 'TokenManager->revokeTokenByQuery', ->
         @sut.revokeTokenByQuery { uuid: 'spiral', query: createdAt: { $gt: thirtySecondsAgo } }, (error) =>
           done error
 
-      it 'should have only the root token', (done) ->
+      it 'should have only one token', (done) ->
         @datastore.find { uuid: 'spiral' }, (error, records) =>
           hashedTokens = _.map records, 'hashedToken'
           expect(hashedTokens).to.deep.equal [
             'PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8='
-            'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
           ]
           done()
 
@@ -109,13 +97,9 @@ describe 'TokenManager->revokeTokenByQuery', ->
         @sut.revokeTokenByQuery {uuid: 'spiral', query: { services: { $in: ['super'] } }}, (error) =>
           done error
 
-      it 'should have only the root token', (done) ->
+      it 'should have no tokens', (done) ->
         @datastore.find { uuid: 'spiral' }, (error, records) =>
-          hashedTokens = _.map records, 'hashedToken'
-          expect(hashedTokens).to.deep.equal [
-            'U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU='
-            'bOT5i3r4bUXvG5owgEVUBOtnF30zyuShfocALDoi1HA='
-          ]
+          expect(records.length).to.equal 1
           done()
 
       it 'should remove the token 1 from the cache', (done) ->

@@ -34,13 +34,6 @@ describe 'TokenManager->revokeToken', ->
           metadata:
             createdAt: new Date()
         }
-        {
-          uuid: 'spiral'
-          hashedToken: 'GQv7F9G0GsV3JvEewG+FDkE2G0dGKAi7/W3Ss7QQmgI='
-          hashedRootToken: 'this-is-something-crazy'
-          metadata:
-            createdAt: new Date()
-        }
       ]
 
       @datastore.insert records, done
@@ -55,9 +48,7 @@ describe 'TokenManager->revokeToken', ->
       it 'should have only the token', (done) ->
         @datastore.find uuid: 'spiral', (error, records) =>
           hashedTokens = _.map records, 'hashedToken'
-          expect(hashedTokens).to.deep.equal [
-            'GQv7F9G0GsV3JvEewG+FDkE2G0dGKAi7/W3Ss7QQmgI='
-          ]
+          expect(hashedTokens).to.deep.equal []
           done()
 
       it 'should remove the token 1 from the cache', (done) ->

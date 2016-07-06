@@ -12,14 +12,6 @@ Meshblu Token Manager
 
 ```coffee
 tokens = [
-  # Root token record
-  {
-    uuid: 'some-uuid'
-    hashedToken: 'root-hashed-token'
-    hashedRootToken: 'non-deterministic-hashed-token'
-    metadata:
-      createdAt: new Date()
-  }
   # Normal session token record
   {
     uuid: 'some-uuid'
