@@ -30,6 +30,9 @@ describe 'TokenManager->storeToken', ->
         @datastore.findOne { uuid: 'spiral', hashedToken: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=' }, (error, @record) =>
           done error
 
+      it 'should not add a root to the datastore', ->
+        expect(@record.root).to.not.exist
+
       it 'should add a token to the datastore', ->
         expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
 
@@ -56,8 +59,37 @@ describe 'TokenManager->storeToken', ->
       it 'should add a token to the datastore', ->
         expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
 
+      it 'should not add a root to the datastore', ->
+        expect(@record.root).to.not.exist
+
       it 'should add a expiresOn to the datastore', ->
         expect(@record.expiresOn).to.deep.equal @expiresOn
+
+      it 'should match the generated token', (done) ->
+        @sut._hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
+          return done error if error?
+          expect(@record.hashedToken).to.equal hashedToken
+          done()
+
+      it 'should have the correct metadata in the datastore', ->
+        expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
+
+  describe 'when called with root: true', ->
+    beforeEach (done) ->
+      @expiresOn = new Date()
+      @sut.storeToken { uuid: 'spiral', token: 'abc123', root: true }, (error) =>
+        done error
+
+    describe 'when the record is retrieved', ->
+      beforeEach (done) ->
+        @datastore.findOne { uuid: 'spiral', root: true }, (error, @record) =>
+          done error
+
+      it 'should add a token to the datastore', ->
+        expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
+
+      it 'should add a root to the datastore', ->
+        expect(@record.root).to.be.true
 
       it 'should match the generated token', (done) ->
         @sut._hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>

@@ -15,11 +15,11 @@ class TokenManager
           return callback error if error?
           callback null, token
 
-  storeToken: ({ uuid, token, expiresOn }, callback) =>
+  storeToken: ({ uuid, token, expiresOn, root }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       @_hashToken {uuid, token}, (error, hashedToken) =>
         return callback error if error?
-        @_storeHashedToken { uuid, hashedToken, expiresOn }, (error) =>
+        @_storeHashedToken { uuid, hashedToken, expiresOn, root }, (error) =>
           return callback error if error?
           callback null
 
