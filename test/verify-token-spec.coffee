@@ -1,10 +1,8 @@
 _         = require 'lodash'
-bcrypt    = require 'bcrypt'
-crypto    = require 'crypto'
 mongojs   = require 'mongojs'
 Datastore = require 'meshblu-core-datastore'
 
-TokenManager = require '../src/token-manager'
+TokenManager = require '../'
 
 describe 'TokenManager->verifyToken', ->
   beforeEach (done) ->

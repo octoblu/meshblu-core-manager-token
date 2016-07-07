@@ -4,7 +4,7 @@ crypto    = require 'crypto'
 mongojs   = require 'mongojs'
 Datastore = require 'meshblu-core-datastore'
 
-TokenManager = require '../src/token-manager'
+TokenManager = require '../'
 
 describe 'TokenManager->revokeToken', ->
   beforeEach (done) ->

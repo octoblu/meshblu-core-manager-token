@@ -1,10 +1,8 @@
 _         = require 'lodash'
-bcrypt    = require 'bcrypt'
-crypto    = require 'crypto'
 mongojs   = require 'mongojs'
 Datastore = require 'meshblu-core-datastore'
 
-TokenManager = require '../src/token-manager'
+TokenManager = require '../'
 
 describe 'TokenManager->storeToken', ->
   beforeEach (done) ->
@@ -60,7 +58,7 @@ describe 'TokenManager->storeToken', ->
 
       it 'should add a expiresOn to the datastore', ->
         expect(@record.expiresOn).to.deep.equal @expiresOn
-        
+
       it 'should match the generated token', (done) ->
         @sut._hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
           return done error if error?

@@ -6,12 +6,12 @@ class TokenManager
   constructor: ({@datastore,@pepper,@uuidAliasResolver}) ->
     throw new Error "Missing mandatory parameter: @pepper" if _.isEmpty @pepper
 
-  generateAndStoreToken: ({ uuid, metadata, expiresOn }, callback) =>
+  generateAndStoreToken: ({ uuid, metadata, expiresOn, root }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       token = @_generateToken()
       @_hashToken {uuid, token}, (error, hashedToken) =>
         return callback error if error?
-        @_storeHashedToken { uuid, hashedToken, metadata, expiresOn }, (error) =>
+        @_storeHashedToken { uuid, hashedToken, metadata, expiresOn, root }, (error) =>
           return callback error if error?
           callback null, token
 
@@ -22,6 +22,11 @@ class TokenManager
         @_storeHashedToken { uuid, hashedToken, expiresOn }, (error) =>
           return callback error if error?
           callback null
+
+  removeRootToken: ({uuid}, callback) =>
+    @uuidAliasResolver.resolve uuid, (error, uuid) =>
+      return callback error if error?
+      @datastore.remove {uuid, root: true}, callback
 
   revokeToken: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
@@ -61,10 +66,11 @@ class TokenManager
       callback null, hasher.digest 'base64'
     , 0
 
-  _storeHashedToken: ({ uuid, hashedToken, metadata, expiresOn }, callback) =>
+  _storeHashedToken: ({ uuid, hashedToken, metadata, expiresOn, root }, callback) =>
     record = { uuid, hashedToken }
     return callback new Error('expires on must be a date') if expiresOn? && !_.isDate(expiresOn)
     record.expiresOn = expiresOn if expiresOn?
+    record.root = root if root
     record.metadata = metadata if _.isPlainObject metadata
     record.metadata ?= {}
     record.metadata.createdAt = new Date()
