@@ -1,6 +1,6 @@
 {
   "name": "meshblu-core-manager-token",
-  "version": "7.4.1",
+  "version": "7.4.2",
   "description": "Meshblu Token Manager",
   "main": "index.js",
   "scripts": {
@@ -33,6 +33,7 @@
     "bcrypt": "^0.8.7",
     "coffee-script": "^1.10.0",
     "lodash": "^4.11.2",
-    "meshblu-core-datastore": "^4.5.0"
+    "meshblu-core-datastore": "^4.5.0",
+    "moment": "^2.14.1"
   }
 }

@@ -1,6 +1,7 @@
 _      = require 'lodash'
 bcrypt = require 'bcrypt'
 crypto = require 'crypto'
+moment = require 'moment'
 
 class TokenManager
   constructor: ({@datastore,@pepper,@uuidAliasResolver}) ->
@@ -82,16 +83,13 @@ class TokenManager
   _verifyHashedToken: ({ uuid, token }, callback) =>
     @_hashToken { uuid, token }, (error, hashedToken) =>
       query = { uuid, hashedToken }
-      query.$or = [
-        {
-          expiresOn: { $exists: true, $gte: new Date() }
-        },
-        {
-          expiresOn: { $exists: false }
-        }
-      ]
       @datastore.findOne query, { uuid: true }, (error, record) =>
         return callback error if error?
-        callback null, !!record
+        return callback null, false unless record?
+        return callback null, true unless record.expiresOn?
+        @datastore.remove query, (error) =>
+          return callback error if error?
+          return callback null, true
+
 
 module.exports = TokenManager
