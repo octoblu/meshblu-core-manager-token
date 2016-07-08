@@ -1,6 +1,6 @@
 {
   "name": "meshblu-core-manager-token",
-  "version": "7.4.0",
+  "version": "7.4.1",
   "description": "Meshblu Token Manager",
   "main": "index.js",
   "scripts": {

@@ -45,6 +45,23 @@ describe 'TokenManager->storeToken', ->
       it 'should have the correct metadata in the datastore', ->
         expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
 
+  describe 'when called and the token already exists', ->
+    beforeEach (done) ->
+      @sut.storeToken { uuid: 'spiral', token: 'abc123' }, (error) =>
+        done error
+        
+    beforeEach (done) ->
+      @sut.storeToken { uuid: 'spiral', token: 'abc123' }, (error) =>
+        done error
+
+    describe 'when the record is retrieved', ->
+      beforeEach (done) ->
+        @datastore.find { uuid: 'spiral', hashedToken: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U=' }, (error, @records) =>
+          done error
+
+      it 'should only have one', ->
+        expect(@records.length).to.equal 1
+
   describe 'when called with an expiresON', ->
     beforeEach (done) ->
       @expiresOn = new Date()

@@ -74,7 +74,10 @@ class TokenManager
     record.metadata = metadata if _.isPlainObject metadata
     record.metadata ?= {}
     record.metadata.createdAt = new Date()
-    @datastore.insert record, callback
+    @datastore.findOne { uuid, hashedToken }, { uuid: true }, (error, found) =>
+      return callback error if error?
+      return @datastore.insert record, callback unless found?
+      @datastore.update { uuid, hashedToken }, { $set: record }, callback
 
   _verifyHashedToken: ({ uuid, token }, callback) =>
     @_hashToken { uuid, token }, (error, hashedToken) =>
