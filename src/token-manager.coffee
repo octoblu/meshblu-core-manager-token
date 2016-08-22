@@ -1,7 +1,6 @@
 _      = require 'lodash'
 bcrypt = require 'bcrypt'
 crypto = require 'crypto'
-moment = require 'moment'
 
 class TokenManager
   constructor: ({@datastore,@pepper,@uuidAliasResolver}) ->
@@ -15,6 +14,24 @@ class TokenManager
         @_storeHashedToken { uuid, hashedToken, metadata, expiresOn, root }, (error) =>
           return callback error if error?
           callback null, token
+
+  search: ({uuid, query, projection}, callback) =>
+    return callback new Error 'Missing uuid' unless uuid?
+    query ?= {}
+    projection ?= {}
+    secureQuery = _.clone query
+    secureQuery.uuid = uuid
+
+    options =
+      limit:     1000
+      maxTimeMS: 2000
+      sort:      {_id: -1}
+
+    @datastore.find secureQuery, projection, options, (error, tokens) =>
+      return callback error if error?
+      results = _.map tokens, (token) =>
+        _.omit token, ['hashedToken']
+      callback null, results
 
   storeToken: ({ uuid, token, expiresOn, root }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
