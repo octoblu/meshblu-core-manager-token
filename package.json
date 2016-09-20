@@ -4,7 +4,10 @@
   "description": "Meshblu Token Manager",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul cover _mocha -- -R spec --require coffee-coverage/register-istanbul && mocha --reporter json > coverage/mocha.json"
+    "test": "mocha",
+    "coverage": "nyc npm test",
+    "mocha:json": "env NPM_ENV=test mocha --reporter json > coverage/mocha.json",
+    "test:watch": "mocha -w -R mocha-multi --reporter-options spec=-,mocha-osx-reporter=-"
   },
   "repository": {
     "type": "git",
@@ -21,10 +24,10 @@
   "homepage": "https://github.com/octoblu/meshblu-core-manager-token#readme",
   "devDependencies": {
     "chai": "^3.5.0",
-    "coffee-coverage": "^1.0.1",
-    "istanbul": "^0.4.4",
     "mocha": "^2.5.3",
-    "mocha-istanbul": "^0.2.0",
+    "mocha-multi": "^0.9.1",
+    "mocha-osx-reporter": "^0.1.2",
+    "nyc": "^8.3.0",
     "sinon": "^1.17.4",
     "sinon-chai": "^2.8.0"
   },
@@ -35,5 +38,16 @@
     "lodash": "^4.11.2",
     "meshblu-core-datastore": "^4.6.1",
     "mongojs": "^2.4.0"
+  },
+  "nyc": {
+    "cache": true,
+    "reporter": [
+      "text-summary",
+      "lcov",
+      "json"
+    ],
+    "extension": [
+      ".coffee"
+    ]
   }
 }
