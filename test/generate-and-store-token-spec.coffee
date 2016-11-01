@@ -42,11 +42,9 @@ describe 'TokenManager->generateAndStoreToken', ->
       it 'should add a token to the datastore', ->
         expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
 
-      it 'should match the generated token', (done) ->
-        @sut.hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
-          return done error if error?
-          expect(@record.hashedToken).to.equal hashedToken
-          done()
+      it 'should match the generated token', ->
+        hashedToken = @sut.hashToken { uuid: 'spiral', token: 'abc123' }
+        expect(@record.hashedToken).to.equal hashedToken
 
       it 'should have the correct metadata in the datastore', ->
         expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
@@ -73,11 +71,9 @@ describe 'TokenManager->generateAndStoreToken', ->
         it 'should add a hashedToken to the datastore', ->
           expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
 
-        it 'should match the generated token', (done) ->
-          @sut.hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
-            return done error if error?
-            expect(@record.hashedToken).to.equal hashedToken
-            done()
+        it 'should match the generated token', ->
+          hashedToken = @sut.hashToken { uuid: 'spiral', token: 'abc123' }
+          expect(@record.hashedToken).to.equal hashedToken
 
         it 'should have the correct metadata in the datastore', ->
           expect(@record.metadata.tag).to.equal 'foo'
@@ -104,11 +100,9 @@ describe 'TokenManager->generateAndStoreToken', ->
         it 'should add a token to the datastore', ->
           expect(@record.hashedToken).to.equal 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
 
-        it 'should match the generated hashedToken', (done) ->
-          @sut.hashToken { uuid: 'spiral', token: 'abc123' }, (error, hashedToken) =>
-            return done error if error?
-            expect(@record.hashedToken).to.equal hashedToken
-            done()
+        it 'should match the generated hashedToken', ->
+          hashedToken = @sut.hashToken { uuid: 'spiral', token: 'abc123' }
+          expect(@record.hashedToken).to.equal hashedToken
 
         it 'should have the correct metadata in the datastore', ->
           expect(@record.metadata.tag).to.equal 'foo'

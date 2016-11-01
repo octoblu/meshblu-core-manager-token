@@ -10,44 +10,43 @@ class TokenManager
   generateAndStoreTokenInCache: ({uuid, expireSeconds}, callback) =>
     token = @_generateToken()
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
-      @hashToken {uuid, token}, (error, hashedToken) =>
+      hashedToken = @hashToken { uuid, token}
+      return callback new Error 'Unable to hash token' unless hashedToken?
+      @_storeHashedTokenInCache {uuid, hashedToken, expireSeconds}, (error) =>
         return callback error if error?
-        @_storeHashedTokenInCache {uuid, hashedToken, expireSeconds}, (error) =>
-          return callback error if error?
-          callback null, token
+        callback null, token
 
   generateAndStoreToken: ({uuid, data, metadata}, callback) =>
     metadata ?= data
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       token = @_generateToken()
-      @hashToken {uuid, token}, (error, hashedToken) =>
+      hashedToken = @hashToken { uuid, token}
+      return callback new Error 'Unable to hash token' unless hashedToken?
+      @_storeHashedToken {uuid, hashedToken, metadata}, (error) =>
         return callback error if error?
-        @_storeHashedToken {uuid, hashedToken, metadata}, (error) =>
-          return callback error if error?
-          callback null, token
+        callback null, token
 
-  hashToken: ({uuid, token}, callback) =>
-    return callback null, null unless uuid? and token?
-    _.delay =>
-      hasher = crypto.createHash 'sha256'
-      hasher.update token
-      hasher.update uuid
-      hasher.update @pepper
-      callback null, hasher.digest 'base64'
-    , 0
+  hashToken: ({uuid, token}) =>
+    return null unless uuid? and token?
+    hasher = crypto.createHash 'sha256'
+    hasher.update token
+    hasher.update uuid
+    hasher.update @pepper
+    hasher.digest 'base64'
 
   checkTokenCache: ({ uuid, token }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-      @hashToken { uuid, token }, (error, hashedToken) =>
-        return callback error if error?
-        @cache.exists "#{uuid}:#{hashedToken}", callback
+      hashedToken = @hashToken { uuid, token}
+      return callback new Error 'Unable to hash token' unless hashedToken?
+      @cache.exists "#{uuid}:#{hashedToken}", callback
 
   removeTokenFromCache: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-      @hashToken {uuid, token}, (error, hashedToken) =>
-        @_clearHashedTokenFromCache {uuid, hashedToken}, callback
+      hashedToken = @hashToken { uuid, token}
+      return callback new Error 'Unable to hash token' unless hashedToken?
+      @_clearHashedTokenFromCache {uuid, hashedToken}, callback
 
   removeHashedTokenFromCache: ({uuid, hashedToken}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
@@ -57,13 +56,13 @@ class TokenManager
   revokeToken: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-      @hashToken {uuid, token}, (error, hashedToken) =>
+      hashedToken = @hashToken { uuid, token}
+      return callback new Error 'Unable to hash token' unless hashedToken?
+      @datastore.remove {uuid, hashedToken}, (error) =>
         return callback error if error?
-        @datastore.remove {uuid, hashedToken}, (error) =>
+        @_clearHashedTokenFromCache { uuid, hashedToken }, (error) =>
           return callback error if error?
-          @_clearHashedTokenFromCache { uuid, hashedToken }, (error) =>
-            return callback error if error?
-            callback null, true
+          callback null, true
 
   revokeTokenByQuery: ({uuid, query}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
@@ -85,10 +84,11 @@ class TokenManager
       @_verifyHashedToken { uuid, token }, callback
 
   _verifyHashedToken: ({ uuid, token }, callback) =>
-    @hashToken { uuid, token }, (error, hashedToken) =>
-      @datastore.findOne { uuid, hashedToken }, { uuid: true }, (error, record) =>
-        return callback error if error?
-        callback null, !!record
+    hashedToken = @hashToken { uuid, token}
+    return callback new Error 'Unable to hash token' unless hashedToken?
+    @datastore.findOne { uuid, hashedToken }, { uuid: true }, (error, record) =>
+      return callback error if error?
+      callback null, !!record
 
   _clearHashedTokensFromCache: (sessionTokens, callback) =>
     async.eachSeries sessionTokens, @_clearHashedTokenFromCache, callback
