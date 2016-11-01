@@ -9,11 +9,11 @@ class TokenManager
   generateAndStoreToken: ({ uuid, metadata, expiresOn, root }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       token = @_generateToken()
-      @_hashToken {uuid, token}, (error, hashedToken) =>
+      hashedToken = @_hashToken {uuid, token}
+      return callback new Error 'Unable to hash token' unless hashedToken?
+      @_storeHashedToken { uuid, hashedToken, metadata, expiresOn, root }, (error) =>
         return callback error if error?
-        @_storeHashedToken { uuid, hashedToken, metadata, expiresOn, root }, (error) =>
-          return callback error if error?
-          callback null, token
+        callback null, token
 
   search: ({uuid, query, projection}, callback) =>
     return callback new Error 'Missing uuid' unless uuid?
@@ -35,11 +35,11 @@ class TokenManager
 
   storeToken: ({ uuid, token, expiresOn, root }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
-      @_hashToken {uuid, token}, (error, hashedToken) =>
+      hashedToken = @_hashToken {uuid, token}, (error, hashedToken) =>
+      return callback new Error 'Unable to hash token' unless hashedToken?
+      @_storeHashedToken { uuid, hashedToken, expiresOn, root }, (error) =>
         return callback error if error?
-        @_storeHashedToken { uuid, hashedToken, expiresOn, root }, (error) =>
-          return callback error if error?
-          callback null
+        callback null
 
   removeRootToken: ({uuid}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
@@ -49,11 +49,11 @@ class TokenManager
   revokeToken: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-      @_hashToken {uuid, token}, (error, hashedToken) =>
+      hashedToken = @_hashToken {uuid, token}
+      return callback new Error 'Unable to hash token' unless hashedToken?
+      @datastore.remove { uuid, hashedToken }, (error) =>
         return callback error if error?
-        @datastore.remove { uuid, hashedToken }, (error) =>
-          return callback error if error?
-          callback null, true
+        callback null, true
 
   revokeTokenByQuery: ({uuid, query}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
@@ -75,14 +75,12 @@ class TokenManager
     return crypto.createHash('sha1').update((new Date()).valueOf().toString() + Math.random().toString()).digest('hex')
 
   _hashToken: ({uuid, token}, callback) =>
-    return callback() unless uuid? and token?
-    _.delay =>
-      hasher = crypto.createHash 'sha256'
-      hasher.update token
-      hasher.update uuid
-      hasher.update @pepper
-      callback null, hasher.digest 'base64'
-    , 0
+    return unless uuid? and token?
+    hasher = crypto.createHash 'sha256'
+    hasher.update token
+    hasher.update uuid
+    hasher.update @pepper
+    hasher.digest 'base64'
 
   _storeHashedToken: ({ uuid, hashedToken, metadata, expiresOn, root }, callback) =>
     record = { uuid, hashedToken }
@@ -98,15 +96,16 @@ class TokenManager
       @datastore.update { uuid, hashedToken }, { $set: record }, callback
 
   _verifyHashedToken: ({ uuid, token }, callback) =>
-    @_hashToken { uuid, token }, (error, hashedToken) =>
-      query = { uuid, hashedToken }
-      @datastore.findOne query, { uuid: true }, (error, record) =>
+    hashedToken = @_hashToken { uuid, token }
+    return callback new Error 'Unable to hash token' unless hashedToken?
+    query = { uuid, hashedToken }
+    @datastore.findOne query, { uuid: true }, (error, record) =>
+      return callback error if error?
+      return callback null, false unless record?
+      return callback null, true unless record.expiresOn?
+      @datastore.remove query, (error) =>
         return callback error if error?
-        return callback null, false unless record?
-        return callback null, true unless record.expiresOn?
-        @datastore.remove query, (error) =>
-          return callback error if error?
-          return callback null, true
+        return callback null, true
 
 
 module.exports = TokenManager
