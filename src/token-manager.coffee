@@ -8,11 +8,19 @@ class TokenManager
   generateAndStoreToken: ({ uuid, metadata, expiresOn, root }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       token = @_generateToken()
-      hashedToken = @_hashToken {uuid, token}
+      hashedToken = @hashToken {uuid, token}
       return callback new Error 'Unable to hash token' unless hashedToken?
       @_storeHashedToken { uuid, hashedToken, metadata, expiresOn, root }, (error) =>
         return callback error if error?
         callback null, token
+
+  hashToken: ({uuid, token}) =>
+    return unless uuid? and token?
+    hasher = crypto.createHash 'sha256'
+    hasher.update token
+    hasher.update uuid
+    hasher.update @pepper
+    hasher.digest 'base64'
 
   search: ({uuid, query, projection}, callback) =>
     return callback new Error 'Missing uuid' unless uuid?
@@ -35,7 +43,7 @@ class TokenManager
   storeToken: ({ uuid, token, expiresOn, root }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-      hashedToken = @_hashToken {uuid, token}
+      hashedToken = @hashToken {uuid, token}
       return callback new Error 'Unable to hash token' unless hashedToken?
       @_storeHashedToken { uuid, hashedToken, expiresOn, root }, callback
 
@@ -47,7 +55,7 @@ class TokenManager
   revokeToken: ({uuid, token}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
       return callback error if error?
-      hashedToken = @_hashToken {uuid, token}
+      hashedToken = @hashToken {uuid, token}
       return callback new Error 'Unable to hash token' unless hashedToken?
       @datastore.remove { uuid, hashedToken }, (error) =>
         return callback error if error?
@@ -72,13 +80,9 @@ class TokenManager
   _generateToken: =>
     return crypto.createHash('sha1').update((new Date()).valueOf().toString() + Math.random().toString()).digest('hex')
 
-  _hashToken: ({uuid, token}, callback) =>
-    return unless uuid? and token?
-    hasher = crypto.createHash 'sha256'
-    hasher.update token
-    hasher.update uuid
-    hasher.update @pepper
-    hasher.digest 'base64'
+  # Becuase I didn't want to make a breaking change
+  _hashToken: ({ uuid, token }) =>
+    return @hashToken({ uuid, token })
 
   _storeHashedToken: ({ uuid, hashedToken, metadata, expiresOn, root }, callback) =>
     record = { uuid, hashedToken }
@@ -94,7 +98,7 @@ class TokenManager
       @datastore.update { uuid, hashedToken }, { $set: record }, callback
 
   _verifyHashedToken: ({ uuid, token }, callback) =>
-    hashedToken = @_hashToken { uuid, token }
+    hashedToken = @hashToken { uuid, token }
     return callback new Error 'Unable to hash token' unless hashedToken?
     query = { uuid, hashedToken }
     @datastore.findOne query, { uuid: true }, (error, record) =>
