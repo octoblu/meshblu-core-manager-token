@@ -1,3 +1,4 @@
+{describe,beforeEach,it,expect} = global
 _             = require 'lodash'
 mongojs       = require 'mongojs'
 Datastore     = require 'meshblu-core-datastore'
@@ -24,7 +25,7 @@ describe 'Search Tokens', ->
     it 'should have an error', ->
       expect(@error.message).to.equal 'Missing uuid'
 
-  context 'basic search', ->
+  describe 'basic search', ->
     beforeEach (done) ->
       tokens = [
         {
@@ -40,7 +41,7 @@ describe 'Search Tokens', ->
       ]
       @datastore.insert tokens, done
 
-    context 'when called with no query', ->
+    describe 'when called with no query', ->
       beforeEach (done) ->
         @sut.search uuid: 'darth-vader', (error, @tokens) => done error
 
@@ -58,14 +59,14 @@ describe 'Search Tokens', ->
         _.each @tokens, (token) =>
           expect(token.hashedToken).to.be.undefined
 
-    context 'when called with a dot notated projection', ->
+    describe 'when called with a dot notated projection', ->
       beforeEach (done) ->
         @sut.search uuid: 'darth-vader', query: {'metadata.tag': 'dark-saber'}, (error, @tokens) => done error
 
       it 'should return 1 tokens', ->
         expect(@tokens.length).to.equal 1
 
-    context 'when called with a non-matching query', ->
+    describe 'when called with a non-matching query', ->
       beforeEach (done) ->
         @sut.search uuid: 'darth-vader', query: {superman: true}, (error, @tokens) => done error
 

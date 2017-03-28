@@ -1,4 +1,5 @@
-_         = require 'lodash'
+{describe,beforeEach,it,expect} = global
+sinon     = require 'sinon'
 mongojs   = require 'mongojs'
 Datastore = require 'meshblu-core-datastore'
 

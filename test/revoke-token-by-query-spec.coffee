@@ -1,6 +1,5 @@
+{describe,beforeEach,it,expect} = global
 _         = require 'lodash'
-bcrypt    = require 'bcrypt'
-crypto    = require 'crypto'
 mongojs   = require 'mongojs'
 Datastore = require 'meshblu-core-datastore'
 

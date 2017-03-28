@@ -1,4 +1,4 @@
-_         = require 'lodash'
+{describe,beforeEach,it,expect} = global
 mongojs   = require 'mongojs'
 Datastore = require 'meshblu-core-datastore'
 TokenManager = require '../'

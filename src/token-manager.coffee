@@ -1,5 +1,4 @@
 _      = require 'lodash'
-bcrypt = require 'bcrypt'
 crypto = require 'crypto'
 
 class TokenManager
@@ -35,11 +34,10 @@ class TokenManager
 
   storeToken: ({ uuid, token, expiresOn, root }, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
-      hashedToken = @_hashToken {uuid, token}, (error, hashedToken) =>
+      return callback error if error?
+      hashedToken = @_hashToken {uuid, token}
       return callback new Error 'Unable to hash token' unless hashedToken?
-      @_storeHashedToken { uuid, hashedToken, expiresOn, root }, (error) =>
-        return callback error if error?
-        callback null
+      @_storeHashedToken { uuid, hashedToken, expiresOn, root }, callback
 
   removeRootToken: ({uuid}, callback) =>
     @uuidAliasResolver.resolve uuid, (error, uuid) =>
