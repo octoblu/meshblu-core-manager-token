@@ -25,14 +25,14 @@ describe 'TokenManager->revokeTokenByQuery', ->
           uuid: 'spiral'
           hashedToken: 'U4Q+LOkeTvMW/0eKg9MCvhWEFH2MTNhRhJQF5wLlGiU='
           metadata:
-            createdAt: new Date()
+            someDate: new Date()
             tag: 'hello'
         }
         {
           uuid: 'spiral'
           hashedToken: 'PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8='
           metadata:
-            createdAt: new Date(Date.now() - (1000 * 60))
+            someDate: new Date(Date.now() - (1000 * 60))
             services: ['super', 'lame', 'awesome']
             tag: 'hello'
         }
@@ -52,7 +52,7 @@ describe 'TokenManager->revokeTokenByQuery', ->
     describe 'when called with a date query', ->
       beforeEach (done) ->
         thirtySecondsAgo = new Date(Date.now() - (1000 * 30))
-        @sut.revokeTokenByQuery { uuid: 'spiral', query: createdAt: { $gt: thirtySecondsAgo } }, (error) =>
+        @sut.revokeTokenByQuery { uuid: 'spiral', query: someDate: { $gt: thirtySecondsAgo } }, (error) =>
           done error
 
       it 'should have only one token', (done) ->

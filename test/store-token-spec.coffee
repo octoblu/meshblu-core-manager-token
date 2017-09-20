@@ -40,9 +40,6 @@ describe 'TokenManager->storeToken', ->
         hashedToken = @sut._hashToken { uuid: 'spiral', token: 'abc123' }
         expect(@record.hashedToken).to.equal hashedToken
 
-      it 'should have the correct metadata in the datastore', ->
-        expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
-
   describe 'when called and the token already exists', ->
     beforeEach (done) ->
       @sut.storeToken { uuid: 'spiral', token: 'abc123' }, (error) =>
@@ -84,9 +81,6 @@ describe 'TokenManager->storeToken', ->
         hashedToken = @sut._hashToken { uuid: 'spiral', token: 'abc123' }
         expect(@record.hashedToken).to.equal hashedToken
 
-      it 'should have the correct metadata in the datastore', ->
-        expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
-
   describe 'when called with root: true', ->
     beforeEach (done) ->
       @expiresOn = new Date()
@@ -107,6 +101,3 @@ describe 'TokenManager->storeToken', ->
       it 'should match the generated token', ->
         hashedToken = @sut._hashToken { uuid: 'spiral', token: 'abc123' }
         expect(@record.hashedToken).to.equal hashedToken
-
-      it 'should have the correct metadata in the datastore', ->
-        expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true

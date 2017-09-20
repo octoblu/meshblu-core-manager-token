@@ -24,14 +24,12 @@ describe 'TokenManager->revokeToken', ->
         {
           uuid: 'spiral'
           hashedToken: 'T/GMBdFNOc9l3uagnYZSwgFfjtp8Vlf6ryltQUEUY1U='
-          metadata:
-            createdAt: new Date()
+          metadata: {}
         }
         {
           uuid: 'spiral'
           hashedToken: 'PEDXcLLHInRFO7ccxgtTwT8IxkJE6ECZsp6s9KF31x8='
-          metadata:
-            createdAt: new Date()
+          metadata: {}
         }
       ]
 

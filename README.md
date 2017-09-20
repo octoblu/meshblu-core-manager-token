@@ -19,8 +19,7 @@ tokens = [
   {
     uuid: 'some-uuid'
     hashedToken: 'hashed-token'
-    metadata:
-      createdAt: new Date()
+    metadata: {}
   }
   # Session token record with custom tags
   {
@@ -29,7 +28,6 @@ tokens = [
     metadata:
       tag: 'some-custom-tag'
       random: 'property'
-      createdAt: new Date()
   }
 ]
 ```

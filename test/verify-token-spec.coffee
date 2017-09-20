@@ -30,8 +30,7 @@ describe 'TokenManager->verifyToken', ->
       @datastore.insert
         uuid: 'superperson'
         hashedToken: 'not-even-a-hash'
-        metadata:
-          createdAt: new Date()
+        metadata: {}
       , done
 
     beforeEach (done) ->

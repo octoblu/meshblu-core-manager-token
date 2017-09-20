@@ -45,9 +45,6 @@ describe 'TokenManager->generateAndStoreToken', ->
         hashedToken = @sut._hashToken { uuid: 'spiral', token: 'abc123' }
         expect(@record.hashedToken).to.equal hashedToken
 
-      it 'should have the correct metadata in the datastore', ->
-        expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
-
   describe 'when called with metadata', ->
     beforeEach (done) ->
       @sut._generateToken = sinon.stub().returns('abc123')
@@ -76,8 +73,6 @@ describe 'TokenManager->generateAndStoreToken', ->
 
       it 'should have the correct metadata in the datastore', ->
         expect(@record.metadata.tag).to.equal 'foo'
-        expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
-
 
   describe 'when called with an expiresOn', ->
     beforeEach (done) ->
@@ -108,7 +103,6 @@ describe 'TokenManager->generateAndStoreToken', ->
 
       it 'should have the correct metadata in the datastore', ->
         expect(@record.metadata.tag).to.equal 'foo'
-        expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true
 
   describe 'when called with root: true', ->
     beforeEach (done) ->
@@ -130,6 +124,3 @@ describe 'TokenManager->generateAndStoreToken', ->
       it 'should match the generated token', ->
         hashedToken = @sut._hashToken { uuid: 'spiral', token: 'abc123' }
         expect(@record.hashedToken).to.equal hashedToken
-
-      it 'should have the correct metadata in the datastore', ->
-        expect(new Date(@record.metadata.createdAt).getTime() > (Date.now() - 1000)).to.be.true

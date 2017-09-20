@@ -91,7 +91,6 @@ class TokenManager
     record.root = root if root
     record.metadata = metadata if _.isPlainObject metadata
     record.metadata ?= {}
-    record.metadata.createdAt = new Date()
     @datastore.findOne { uuid, hashedToken }, { uuid: true }, (error, found) =>
       return callback error if error?
       return @datastore.insert record, callback unless found?
